@@ -154,12 +154,8 @@
                     <th>Text</th>
                 </tr>
                 <tr>
-                    <td>Mingrelian (Latinized)</td>
-                    <td id="mingrelianLatinized"></td>
-                </tr>
-                <tr>
-                    <td>Mingrelian (Mkhedruli)</td>
-                    <td id="mingrelianMkhedruli"></td>
+                    <td>Mingrelian</td>
+                    <td id="mingrelianCombined"></td>
                 </tr>
                 <tr>
                     <td>Georgian</td>
@@ -179,6 +175,26 @@
     </div>
     
     <script>
+        // Convert Georgian Mkhedruli script to latinized Georgian
+        function mkhedruliToLatinized(text) {
+            const georgianToLatin = {
+                'ა': 'a', 'ბ': 'b', 'გ': 'g', 'დ': 'd', 'ე': 'e',
+                'ვ': 'v', 'ზ': 'z', 'თ': 't', 'ი': 'i', 'კ': "k'",
+                'ლ': 'l', 'მ': 'm', 'ნ': 'n', 'ო': 'o', 'პ': "p'",
+                'ჟ': 'zh', 'რ': 'r', 'ს': 's', 'ტ': "t'", 'უ': 'u',
+                'ფ': 'p', 'ქ': 'k', 'ღ': 'gh', 'ყ': 'q', 'შ': 'sh',
+                'ჩ': 'ch', 'ც': 'c', 'ძ': 'dz', 'წ': "ts'", 'ჭ': "ch'",
+                'ხ': 'x', 'ჯ': 'j', 'ჰ': 'h', 'ჷ': "e'", 'ჸ': '՚',
+                'ʼ': "'"
+            };
+            
+            let result = '';
+            for (let char of text) {
+                result += georgianToLatin[char] || char;
+            }
+            return result;
+        }
+        
         // Update UI based on selected model
         function updateUIForModel() {
             const modelSelect = document.getElementById('model');
@@ -339,9 +355,15 @@
                 const data = await response.json();
                 
                 // Update the result fields
-                document.getElementById('mingrelianLatinized').textContent = data.mingrelian_latinized;
-                document.getElementById('mingrelianMkhedruli').textContent = data.mingrelian_mkhedruli;
-                document.getElementById('georgian').textContent = data.georgian;
+                // Combine Mingrelian mkhedruli and latinized: "გომორძგუა /gomordzgua/"
+                const mingrelianCombined = `${data.mingrelian_mkhedruli} /${data.mingrelian_latinized}/`;
+                document.getElementById('mingrelianCombined').textContent = mingrelianCombined;
+                
+                // Combine Georgian mkhedruli and latinized: "შვილი /shvili/"
+                const georgianLatinized = mkhedruliToLatinized(data.georgian);
+                const georgianCombined = `${data.georgian} /${georgianLatinized}/`;
+                document.getElementById('georgian').textContent = georgianCombined;
+                
                 document.getElementById('english').textContent = data.english;
                 document.getElementById('fullResponse').value = data.full_response;
                 
