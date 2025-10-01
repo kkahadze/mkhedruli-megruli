@@ -100,8 +100,8 @@
     
     <div class="container">
         <div class="form-group">
-            <label for="apiKey">OpenAI API Key:</label>
-            <input type="password" id="apiKey" placeholder="sk-..." />
+            <label for="apiKey">API Key:</label>
+            <input type="password" id="apiKey" placeholder="Enter your API key..." />
             <div style="margin-top: 5px;">
                 <label style="font-weight: normal; font-size: 14px;">
                     <input type="checkbox" id="rememberKey" style="width: auto; margin-right: 5px;" />
@@ -109,28 +109,20 @@
                 </label>
                 <span class="clear-settings" id="clearSettings" style="margin-left: 15px;">Clear saved settings</span>
             </div>
-            <small>Your API key is used only for this request and stored locally in your browser if you choose to remember it.</small>
+            <small id="apiKeyHelp">Your API key is used only for this request and stored locally in your browser if you choose to remember it.</small>
         </div>
         
         <div class="form-group">
             <label for="model">AI Model:</label>
             <select id="model">
-                <optgroup label="OpenAI GPT-5 (Latest)">
-                    <option value="gpt-5-2025-08-07">GPT-5 (Latest)</option>
+                <optgroup label="OpenAI">
+                    <option value="gpt-5-2025-08-07" data-provider="openai" selected>GPT-5 (Latest)</option>
                 </optgroup>
-                <optgroup label="OpenAI GPT-4o">
-                    <option value="gpt-4o" selected>GPT-4o (Recommended)</option>
-                    <option value="gpt-4o-mini">GPT-4o Mini (Faster, Cheaper)</option>
-                </optgroup>
-                <optgroup label="OpenAI GPT-4">
-                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                    <option value="gpt-4">GPT-4</option>
-                </optgroup>
-                <optgroup label="OpenAI GPT-3.5">
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Fastest, Cheapest)</option>
+                <optgroup label="Anthropic">
+                    <option value="claude-3-5-sonnet-20241022" data-provider="anthropic">Claude 3.5 Sonnet (Recommended)</option>
                 </optgroup>
             </select>
-            <small>Choose the AI model for translation. GPT-4o is recommended for best quality.</small>
+            <small id="modelHelp">Choose the AI model for translation. Both models provide excellent quality.</small>
         </div>
         
         <div class="form-group">
@@ -187,6 +179,23 @@
     </div>
     
     <script>
+        // Update UI based on selected model
+        function updateUIForModel() {
+            const modelSelect = document.getElementById('model');
+            const selectedOption = modelSelect.options[modelSelect.selectedIndex];
+            const provider = selectedOption.getAttribute('data-provider');
+            const apiKeyInput = document.getElementById('apiKey');
+            const apiKeyHelp = document.getElementById('apiKeyHelp');
+            
+            if (provider === 'anthropic') {
+                apiKeyInput.placeholder = 'sk-ant-...';
+                apiKeyHelp.innerHTML = 'Enter your Anthropic API key. Get one at <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a>';
+            } else {
+                apiKeyInput.placeholder = 'sk-...';
+                apiKeyHelp.innerHTML = 'Enter your OpenAI API key. Get one at <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a>';
+            }
+        }
+        
         // Load saved preferences from localStorage on page load
         window.addEventListener('DOMContentLoaded', function() {
             const savedApiKey = localStorage.getItem('mingrelian_api_key');
@@ -209,6 +218,9 @@
             if (savedTargetLang) {
                 document.getElementById('targetLang').value = savedTargetLang;
             }
+            
+            // Update UI for the selected model
+            updateUIForModel();
         });
         
         // Save preferences when "Remember Key" checkbox changes
@@ -235,9 +247,10 @@
             }
         });
         
-        // Save model preference when it changes
+        // Save model preference when it changes and update UI
         document.getElementById('model').addEventListener('change', function() {
             localStorage.setItem('mingrelian_model', this.value);
+            updateUIForModel();
         });
         
         // Save target language preference when it changes
@@ -256,8 +269,11 @@
                 // Clear form
                 document.getElementById('apiKey').value = '';
                 document.getElementById('rememberKey').checked = false;
-                document.getElementById('model').value = 'gpt-4o';
+                document.getElementById('model').value = 'gpt-5-2025-08-07';
                 document.getElementById('targetLang').value = 'english';
+                
+                // Update UI for the reset model
+                updateUIForModel();
                 
                 alert('All saved settings have been cleared!');
             }
@@ -266,13 +282,17 @@
         document.getElementById('translateBtn').addEventListener('click', async function() {
             // Get values from form
             const apiKey = document.getElementById('apiKey').value.trim();
-            const model = document.getElementById('model').value;
+            const modelSelect = document.getElementById('model');
+            const model = modelSelect.value;
+            const selectedOption = modelSelect.options[modelSelect.selectedIndex];
+            const provider = selectedOption.getAttribute('data-provider');
             const targetLang = document.getElementById('targetLang').value;
             const mingrelianText = document.getElementById('mingrelianText').value.trim();
             
             // Validate inputs
             if (!apiKey) {
-                showError('Please enter your OpenAI API key');
+                const providerName = provider === 'anthropic' ? 'Anthropic' : 'OpenAI';
+                showError(`Please enter your ${providerName} API key`);
                 return;
             }
             
@@ -286,7 +306,7 @@
             document.getElementById('resultContainer').classList.add('hidden');
             
             // Show loading indicator with model name
-            const modelName = document.getElementById('model').options[document.getElementById('model').selectedIndex].text;
+            const modelName = selectedOption.text;
             document.getElementById('loading').innerHTML = `<p>Translating with ${modelName}... This may take a few seconds...</p>`;
             document.getElementById('loading').classList.remove('hidden');
             
@@ -302,7 +322,7 @@
                         api_key: apiKey,
                         target_language: targetLang,
                         model: model,
-                        provider: 'openai'
+                        provider: provider
                     })
                 });
                 
