@@ -95,6 +95,27 @@
         </div>
         
         <div class="form-group">
+            <label for="model">AI Model:</label>
+            <select id="model">
+                <optgroup label="OpenAI GPT-5 (Latest)">
+                    <option value="gpt-5-2025-08-07">GPT-5 (Latest)</option>
+                </optgroup>
+                <optgroup label="OpenAI GPT-4o">
+                    <option value="gpt-4o" selected>GPT-4o (Recommended)</option>
+                    <option value="gpt-4o-mini">GPT-4o Mini (Faster, Cheaper)</option>
+                </optgroup>
+                <optgroup label="OpenAI GPT-4">
+                    <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                    <option value="gpt-4">GPT-4</option>
+                </optgroup>
+                <optgroup label="OpenAI GPT-3.5">
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Fastest, Cheapest)</option>
+                </optgroup>
+            </select>
+            <small>Choose the AI model for translation. GPT-4o is recommended for best quality.</small>
+        </div>
+        
+        <div class="form-group">
             <label for="targetLang">Target Language:</label>
             <select id="targetLang">
                 <option value="english">English</option>
@@ -151,6 +172,7 @@
         document.getElementById('translateBtn').addEventListener('click', async function() {
             // Get values from form
             const apiKey = document.getElementById('apiKey').value.trim();
+            const model = document.getElementById('model').value;
             const targetLang = document.getElementById('targetLang').value;
             const mingrelianText = document.getElementById('mingrelianText').value.trim();
             
@@ -169,7 +191,9 @@
             document.getElementById('error').classList.add('hidden');
             document.getElementById('resultContainer').classList.add('hidden');
             
-            // Show loading indicator
+            // Show loading indicator with model name
+            const modelName = document.getElementById('model').options[document.getElementById('model').selectedIndex].text;
+            document.getElementById('loading').innerHTML = `<p>Translating with ${modelName}... This may take a few seconds...</p>`;
             document.getElementById('loading').classList.remove('hidden');
             
             try {
@@ -182,7 +206,9 @@
                     body: JSON.stringify({
                         prompt: mingrelianText,
                         api_key: apiKey,
-                        target_language: targetLang
+                        target_language: targetLang,
+                        model: model,
+                        provider: 'openai'
                     })
                 });
                 
