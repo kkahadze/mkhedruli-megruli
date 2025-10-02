@@ -144,7 +144,7 @@ export default function Home() {
       }, 240000) // 4 minute timeout
 
       // Switch between local and production
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://argo-translator.onrender.com'
       
       const response = await fetch(`${apiUrl}/chat`, {
         method: 'POST',
