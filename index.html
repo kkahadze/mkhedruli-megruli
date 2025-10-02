@@ -100,16 +100,28 @@
     
     <div class="container">
         <div class="form-group">
-            <label for="apiKey">API Key:</label>
-            <input type="password" id="apiKey" placeholder="Enter your API key..." />
+            <label for="openaiApiKey">OpenAI API Key:</label>
+            <input type="password" id="openaiApiKey" placeholder="sk-..." />
             <div style="margin-top: 5px;">
                 <label style="font-weight: normal; font-size: 14px;">
-                    <input type="checkbox" id="rememberKey" style="width: auto; margin-right: 5px;" />
-                    Remember my API key (stored locally in your browser)
+                    <input type="checkbox" id="rememberOpenaiKey" style="width: auto; margin-right: 5px;" />
+                    Remember OpenAI key
                 </label>
-                <span class="clear-settings" id="clearSettings" style="margin-left: 15px;">Clear saved settings</span>
             </div>
-            <small id="apiKeyHelp">Your API key is used only for this request and stored locally in your browser if you choose to remember it.</small>
+            <small>Get your key at <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a></small>
+        </div>
+        
+        <div class="form-group">
+            <label for="anthropicApiKey">Anthropic API Key:</label>
+            <input type="password" id="anthropicApiKey" placeholder="sk-ant-..." />
+            <div style="margin-top: 5px;">
+                <label style="font-weight: normal; font-size: 14px;">
+                    <input type="checkbox" id="rememberAnthropicKey" style="width: auto; margin-right: 5px;" />
+                    Remember Anthropic key
+                </label>
+                <span class="clear-settings" id="clearSettings" style="margin-left: 15px;">Clear all saved settings</span>
+            </div>
+            <small>Get your key at <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a></small>
         </div>
         
         <div class="form-group">
@@ -195,34 +207,25 @@
             return result;
         }
         
-        // Update UI based on selected model
-        function updateUIForModel() {
-            const modelSelect = document.getElementById('model');
-            const selectedOption = modelSelect.options[modelSelect.selectedIndex];
-            const provider = selectedOption.getAttribute('data-provider');
-            const apiKeyInput = document.getElementById('apiKey');
-            const apiKeyHelp = document.getElementById('apiKeyHelp');
-            
-            if (provider === 'anthropic') {
-                apiKeyInput.placeholder = 'sk-ant-...';
-                apiKeyHelp.innerHTML = 'Enter your Anthropic API key. Get one at <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a>';
-            } else {
-                apiKeyInput.placeholder = 'sk-...';
-                apiKeyHelp.innerHTML = 'Enter your OpenAI API key. Get one at <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a>';
-            }
-        }
-        
         // Load saved preferences from localStorage on page load
         window.addEventListener('DOMContentLoaded', function() {
-            const savedApiKey = localStorage.getItem('mingrelian_api_key');
+            const savedOpenaiKey = localStorage.getItem('mingrelian_openai_key');
+            const savedAnthropicKey = localStorage.getItem('mingrelian_anthropic_key');
             const savedModel = localStorage.getItem('mingrelian_model');
             const savedTargetLang = localStorage.getItem('mingrelian_target_lang');
-            const rememberKey = localStorage.getItem('mingrelian_remember_key') === 'true';
+            const rememberOpenaiKey = localStorage.getItem('mingrelian_remember_openai_key') === 'true';
+            const rememberAnthropicKey = localStorage.getItem('mingrelian_remember_anthropic_key') === 'true';
             
-            // Restore API key if saved
-            if (savedApiKey && rememberKey) {
-                document.getElementById('apiKey').value = savedApiKey;
-                document.getElementById('rememberKey').checked = true;
+            // Restore OpenAI API key if saved
+            if (savedOpenaiKey && rememberOpenaiKey) {
+                document.getElementById('openaiApiKey').value = savedOpenaiKey;
+                document.getElementById('rememberOpenaiKey').checked = true;
+            }
+            
+            // Restore Anthropic API key if saved
+            if (savedAnthropicKey && rememberAnthropicKey) {
+                document.getElementById('anthropicApiKey').value = savedAnthropicKey;
+                document.getElementById('rememberAnthropicKey').checked = true;
             }
             
             // Restore model preference if saved
@@ -234,39 +237,59 @@
             if (savedTargetLang) {
                 document.getElementById('targetLang').value = savedTargetLang;
             }
-            
-            // Update UI for the selected model
-            updateUIForModel();
         });
         
-        // Save preferences when "Remember Key" checkbox changes
-        document.getElementById('rememberKey').addEventListener('change', function() {
+        // Save preferences when "Remember OpenAI Key" checkbox changes
+        document.getElementById('rememberOpenaiKey').addEventListener('change', function() {
             const isChecked = this.checked;
-            localStorage.setItem('mingrelian_remember_key', isChecked);
+            localStorage.setItem('mingrelian_remember_openai_key', isChecked);
             
             if (isChecked) {
-                // Save current API key
-                const apiKey = document.getElementById('apiKey').value.trim();
+                // Save current OpenAI API key
+                const apiKey = document.getElementById('openaiApiKey').value.trim();
                 if (apiKey) {
-                    localStorage.setItem('mingrelian_api_key', apiKey);
+                    localStorage.setItem('mingrelian_openai_key', apiKey);
                 }
             } else {
-                // Clear saved API key
-                localStorage.removeItem('mingrelian_api_key');
+                // Clear saved OpenAI API key
+                localStorage.removeItem('mingrelian_openai_key');
             }
         });
         
-        // Save API key when it changes (if remember is checked)
-        document.getElementById('apiKey').addEventListener('input', function() {
-            if (document.getElementById('rememberKey').checked) {
-                localStorage.setItem('mingrelian_api_key', this.value.trim());
+        // Save OpenAI API key when it changes (if remember is checked)
+        document.getElementById('openaiApiKey').addEventListener('input', function() {
+            if (document.getElementById('rememberOpenaiKey').checked) {
+                localStorage.setItem('mingrelian_openai_key', this.value.trim());
             }
         });
         
-        // Save model preference when it changes and update UI
+        // Save preferences when "Remember Anthropic Key" checkbox changes
+        document.getElementById('rememberAnthropicKey').addEventListener('change', function() {
+            const isChecked = this.checked;
+            localStorage.setItem('mingrelian_remember_anthropic_key', isChecked);
+            
+            if (isChecked) {
+                // Save current Anthropic API key
+                const apiKey = document.getElementById('anthropicApiKey').value.trim();
+                if (apiKey) {
+                    localStorage.setItem('mingrelian_anthropic_key', apiKey);
+                }
+            } else {
+                // Clear saved Anthropic API key
+                localStorage.removeItem('mingrelian_anthropic_key');
+            }
+        });
+        
+        // Save Anthropic API key when it changes (if remember is checked)
+        document.getElementById('anthropicApiKey').addEventListener('input', function() {
+            if (document.getElementById('rememberAnthropicKey').checked) {
+                localStorage.setItem('mingrelian_anthropic_key', this.value.trim());
+            }
+        });
+        
+        // Save model preference when it changes
         document.getElementById('model').addEventListener('change', function() {
             localStorage.setItem('mingrelian_model', this.value);
-            updateUIForModel();
         });
         
         // Save target language preference when it changes
@@ -276,20 +299,21 @@
         
         // Clear all saved settings
         document.getElementById('clearSettings').addEventListener('click', function() {
-            if (confirm('Are you sure you want to clear all saved settings (API key, model, language)?')) {
-                localStorage.removeItem('mingrelian_api_key');
+            if (confirm('Are you sure you want to clear all saved settings (API keys, model, language)?')) {
+                localStorage.removeItem('mingrelian_openai_key');
+                localStorage.removeItem('mingrelian_anthropic_key');
                 localStorage.removeItem('mingrelian_model');
                 localStorage.removeItem('mingrelian_target_lang');
-                localStorage.removeItem('mingrelian_remember_key');
+                localStorage.removeItem('mingrelian_remember_openai_key');
+                localStorage.removeItem('mingrelian_remember_anthropic_key');
                 
                 // Clear form
-                document.getElementById('apiKey').value = '';
-                document.getElementById('rememberKey').checked = false;
+                document.getElementById('openaiApiKey').value = '';
+                document.getElementById('anthropicApiKey').value = '';
+                document.getElementById('rememberOpenaiKey').checked = false;
+                document.getElementById('rememberAnthropicKey').checked = false;
                 document.getElementById('model').value = 'gpt-5-2025-08-07';
                 document.getElementById('targetLang').value = 'english';
-                
-                // Update UI for the reset model
-                updateUIForModel();
                 
                 alert('All saved settings have been cleared!');
             }
@@ -297,13 +321,20 @@
         
         document.getElementById('translateBtn').addEventListener('click', async function() {
             // Get values from form
-            const apiKey = document.getElementById('apiKey').value.trim();
             const modelSelect = document.getElementById('model');
             const model = modelSelect.value;
             const selectedOption = modelSelect.options[modelSelect.selectedIndex];
             const provider = selectedOption.getAttribute('data-provider');
             const targetLang = document.getElementById('targetLang').value;
             const mingrelianText = document.getElementById('mingrelianText').value.trim();
+            
+            // Get the appropriate API key based on provider
+            let apiKey;
+            if (provider === 'anthropic') {
+                apiKey = document.getElementById('anthropicApiKey').value.trim();
+            } else {
+                apiKey = document.getElementById('openaiApiKey').value.trim();
+            }
             
             // Validate inputs
             if (!apiKey) {
