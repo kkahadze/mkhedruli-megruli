@@ -96,7 +96,7 @@ export default function Home() {
   }, [rememberAnthropic, anthropicKey])
 
   const models = [
-    { value: 'gpt-5-2025-08-07', label: 'GPT-5 (Latest)', provider: 'openai' },
+    { value: 'gpt-5-2025-08-07', label: 'GPT-5', provider: 'openai' },
     { value: 'claude-sonnet-4-5-20250929', label: 'Claude Sonnet 4.5', provider: 'anthropic' },
   ]
 
