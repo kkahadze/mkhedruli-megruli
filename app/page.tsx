@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { mkhedruliToLatinized } from '@/utils/transliterate'
+import Navbar from '@/components/Navbar'
+import SettingsModal from '@/components/SettingsModal'
 
 export default function Home() {
   const [mingrelianInput, setMingrelianInput] = useState('')
@@ -11,6 +13,7 @@ export default function Home() {
   const [anthropicKey, setAnthropicKey] = useState('')
   const [rememberOpenai, setRememberOpenai] = useState(false)
   const [rememberAnthropic, setRememberAnthropic] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -102,6 +105,10 @@ export default function Home() {
 
   const getProvider = () => {
     return models.find(m => m.value === selectedModel)?.provider || 'openai'
+  }
+
+  const hasApiKey = () => {
+    return openaiKey.length > 0 || anthropicKey.length > 0
   }
 
   const handleTranslate = async () => {
@@ -251,79 +258,48 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* API Keys Section */}
-      <div className="mb-6 grid gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            OpenAI API Key
-          </label>
-          <input
-            type="password"
-            value={openaiKey}
-            onChange={(e) => setOpenaiKey(e.target.value)}
-            placeholder="sk-..."
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-          <label className="mt-2 flex items-center text-sm text-gray-600">
-            <input
-              type="checkbox"
-              checked={rememberOpenai}
-              onChange={(e) => setRememberOpenai(e.target.checked)}
-              className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            Remember key
-          </label>
-        </div>
+    <>
+      <Navbar 
+        onSettingsClick={() => setIsSettingsOpen(true)}
+        hasApiKey={hasApiKey()}
+      />
+      
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        openaiKey={openaiKey}
+        setOpenaiKey={setOpenaiKey}
+        anthropicKey={anthropicKey}
+        setAnthropicKey={setAnthropicKey}
+        rememberOpenai={rememberOpenai}
+        setRememberOpenai={setRememberOpenai}
+        rememberAnthropic={rememberAnthropic}
+        setRememberAnthropic={setRememberAnthropic}
+        selectedModel={selectedModel}
+        setSelectedModel={setSelectedModel}
+        models={models}
+        onClearSettings={clearSettings}
+      />
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Anthropic API Key
-          </label>
-          <input
-            type="password"
-            value={anthropicKey}
-            onChange={(e) => setAnthropicKey(e.target.value)}
-            placeholder="sk-ant-..."
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-          <label className="mt-2 flex items-center text-sm text-gray-600">
-            <input
-              type="checkbox"
-              checked={rememberAnthropic}
-              onChange={(e) => setRememberAnthropic(e.target.checked)}
-              className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            Remember key
-          </label>
-        </div>
-      </div>
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Show a notice if no API key is configured */}
+        {!hasApiKey() && (
+          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-medium text-amber-900">API Key Required</h3>
+                <p className="mt-1 text-sm text-amber-700">
+                  Click the <strong>Settings</strong> button in the top right to add your OpenAI or Anthropic API key.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
-      {/* Model Selection */}
-      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          AI Model
-        </label>
-        <select
-          value={selectedModel}
-          onChange={(e) => setSelectedModel(e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          {models.map((model) => (
-            <option key={model.value} value={model.value}>
-              {model.label}
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={clearSettings}
-          className="mt-2 text-xs text-gray-500 hover:text-gray-700 underline"
-        >
-          Clear all saved settings
-        </button>
-      </div>
-
-      {/* Main Translation Interface */}
+        {/* Main Translation Interface */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Input Section */}
         <div className="space-y-4">
@@ -433,6 +409,7 @@ export default function Home() {
         </div>
       </div>
     </main>
+    </>
   )
 }
 
