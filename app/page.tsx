@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react'
 import { mkhedruliToLatinized } from '@/utils/transliterate'
 import Navbar from '@/components/Navbar'
 import SettingsModal from '@/components/SettingsModal'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 export default function Home() {
+  const { t } = useLanguage()
   const [mingrelianInput, setMingrelianInput] = useState('')
   const [targetLanguage, setTargetLanguage] = useState<'english' | 'georgian'>('english')
   const [selectedModel, setSelectedModel] = useState('gpt-5-2025-08-07')
@@ -118,12 +120,12 @@ export default function Home() {
     console.log('Starting translation...', { provider, model: selectedModel, targetLanguage })
 
     if (!apiKey) {
-      setError(`Please enter your ${provider === 'anthropic' ? 'Anthropic' : 'OpenAI'} API key`)
+      setError(`${t('noApiKey')} ${provider === 'anthropic' ? 'Anthropic' : 'OpenAI'} ${t('apiKey')}`)
       return
     }
 
     if (!mingrelianInput.trim()) {
-      setError('Please enter Mingrelian text to translate')
+      setError(t('enterMingrelian'))
       return
     }
 
@@ -166,7 +168,7 @@ export default function Home() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error('API error:', errorData)
-        setError(`API error: ${errorData.detail || response.statusText}`)
+        setError(`${t('apiError')}: ${errorData.detail || response.statusText}`)
         setLoading(false)
         return
       }
@@ -176,7 +178,7 @@ export default function Home() {
       const decoder = new TextDecoder()
       
       if (!reader) {
-        setError('Failed to read response stream')
+        setError(t('noResult'))
         setLoading(false)
         return
       }
@@ -211,7 +213,7 @@ export default function Home() {
                 finalResult = event.result
               } else if (event.error) {
                 console.error('API error:', event.error)
-                setError(`API error: ${event.error}`)
+                setError(`${t('apiError')}: ${event.error}`)
                 setLoading(false)
                 return
               }
@@ -231,14 +233,14 @@ export default function Home() {
         
         setResult(finalResult)
       } else {
-        setError('No result received from server')
+        setError(t('noResult'))
       }
     } catch (err: any) {
       console.error('Network error:', err)
       if (err.name === 'AbortError') {
-        setError('Request timed out after 4 minutes. The AI model may be taking too long. Try a shorter text or different model.')
+        setError(t('timeout'))
       } else {
-        setError(`Network error: ${err.message}`)
+        setError(`${t('networkError')}: ${err.message}`)
       }
     } finally {
       setLoading(false)
@@ -290,9 +292,9 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <div>
-                <h3 className="text-sm font-medium text-amber-900">API Key Required</h3>
+                <h3 className="text-sm font-medium text-amber-900">{t('apiKeyRequired')}</h3>
                 <p className="mt-1 text-sm text-amber-700">
-                  Click the <strong>Settings</strong> button in the top right to add your OpenAI or Anthropic API key.
+                  {t('apiKeyRequiredMessage')}
                 </p>
               </div>
             </div>
@@ -305,12 +307,12 @@ export default function Home() {
         <div className="space-y-4">
           <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mingrelian Text
+              {t('mingrelianText')}
             </label>
             <textarea
               value={mingrelianInput}
               onChange={(e) => setMingrelianInput(e.target.value)}
-              placeholder="Enter Mingrelian text (latinized or mkhedruli)..."
+              placeholder={t('mingrelianPlaceholder')}
               className="w-full h-64 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
             />
           </div>
@@ -320,7 +322,7 @@ export default function Home() {
             disabled={loading}
             className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Translating...' : 'Translate'}
+            {loading ? t('translating') : t('translate')}
           </button>
 
           {/* Smart Progress Bar */}
@@ -355,7 +357,7 @@ export default function Home() {
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                English
+                {t('english')}
               </button>
               <button
                 onClick={() => setTargetLanguage('georgian')}
@@ -365,7 +367,7 @@ export default function Home() {
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
-                Georgian
+                {t('georgian')}
               </button>
             </div>
           </div>
@@ -374,7 +376,7 @@ export default function Home() {
             <div className="space-y-4">
               <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                 <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                  Mingrelian
+                  {t('mingrelian')}
                 </div>
                 <div className="text-lg text-gray-900">
                   {result.mingrelian_mkhedruli} /{result.mingrelian_latinized}/
@@ -384,14 +386,14 @@ export default function Home() {
               {targetLanguage === 'english' ? (
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                    English
+                    {t('english')}
                   </div>
                   <div className="text-lg text-gray-900">{result.english}</div>
                 </div>
               ) : (
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                    Georgian
+                    {t('georgian')}
                   </div>
                   <div className="text-lg text-gray-900">
                     {result.georgian} /{mkhedruliToLatinized(result.georgian)}/
@@ -403,7 +405,7 @@ export default function Home() {
 
           {!result && !loading && (
             <div className="h-64 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
-              <p className="text-sm text-gray-500">Translation will appear here</p>
+              <p className="text-sm text-gray-500">{t('translationWillAppear')}</p>
             </div>
           )}
         </div>

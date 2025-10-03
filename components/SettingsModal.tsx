@@ -1,3 +1,7 @@
+'use client'
+
+import { useLanguage } from '@/contexts/LanguageContext'
+
 interface SettingsModalProps {
   isOpen: boolean
   onClose: () => void
@@ -31,6 +35,8 @@ export default function SettingsModal({
   models,
   onClearSettings,
 }: SettingsModalProps) {
+  const { t } = useLanguage()
+  
   if (!isOpen) return null
 
   return (
@@ -46,7 +52,7 @@ export default function SettingsModal({
         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Settings</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('settingsTitle')}</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -62,19 +68,19 @@ export default function SettingsModal({
             {/* API Keys Section */}
             <div>
               <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">
-                API Keys
+                {t('apiKeysSection')}
               </h3>
               <div className="space-y-4">
                 {/* OpenAI Key */}
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    OpenAI API Key
+                    {t('openaiApiKey')}
                   </label>
                   <input
                     type="password"
                     value={openaiKey}
                     onChange={(e) => setOpenaiKey(e.target.value)}
-                    placeholder="sk-..."
+                    placeholder={t('openaiPlaceholder')}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                   />
                   <label className="mt-2 flex items-center text-sm text-gray-600">
@@ -84,23 +90,23 @@ export default function SettingsModal({
                       onChange={(e) => setRememberOpenai(e.target.checked)}
                       className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    Remember this key in browser
+                    {t('rememberKey')}
                   </label>
                   <p className="mt-2 text-xs text-gray-500">
-                    Get your key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">platform.openai.com</a>
+                    {t('getKeyAt')} <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">platform.openai.com</a>
                   </p>
                 </div>
 
                 {/* Anthropic Key */}
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Anthropic API Key
+                    {t('anthropicApiKey')}
                   </label>
                   <input
                     type="password"
                     value={anthropicKey}
                     onChange={(e) => setAnthropicKey(e.target.value)}
-                    placeholder="sk-ant-..."
+                    placeholder={t('anthropicPlaceholder')}
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                   />
                   <label className="mt-2 flex items-center text-sm text-gray-600">
@@ -110,10 +116,10 @@ export default function SettingsModal({
                       onChange={(e) => setRememberAnthropic(e.target.checked)}
                       className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    Remember this key in browser
+                    {t('rememberKey')}
                   </label>
                   <p className="mt-2 text-xs text-gray-500">
-                    Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">console.anthropic.com</a>
+                    {t('getKeyAt')} <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">console.anthropic.com</a>
                   </p>
                 </div>
               </div>
@@ -122,11 +128,11 @@ export default function SettingsModal({
             {/* Model Selection */}
             <div>
               <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">
-                AI Model
+                {t('aiModelSection')}
               </h3>
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Model
+                  {t('selectModel')}
                 </label>
                 <select
                   value={selectedModel}
@@ -140,7 +146,7 @@ export default function SettingsModal({
                   ))}
                 </select>
                 <p className="mt-2 text-xs text-gray-500">
-                  Different models may produce different translation quality and speed
+                  {t('modelDescription')}
                 </p>
               </div>
             </div>
@@ -148,22 +154,22 @@ export default function SettingsModal({
             {/* Danger Zone */}
             <div>
               <h3 className="text-sm font-semibold text-red-700 mb-4 uppercase tracking-wide">
-                Danger Zone
+                {t('dangerZone')}
               </h3>
               <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                 <button
                   onClick={() => {
-                    if (confirm('Clear all saved settings? This will remove all stored API keys and preferences.')) {
+                    if (confirm(t('clearConfirm'))) {
                       onClearSettings()
                       onClose()
                     }
                   }}
                   className="text-sm text-red-700 hover:text-red-800 font-medium underline"
                 >
-                  Clear all saved settings
+                  {t('clearAllSettings')}
                 </button>
                 <p className="mt-2 text-xs text-red-600">
-                  This will remove all API keys and preferences from your browser
+                  {t('clearDescription')}
                 </p>
               </div>
             </div>
@@ -175,7 +181,7 @@ export default function SettingsModal({
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              Done
+              {t('done')}
             </button>
           </div>
         </div>
