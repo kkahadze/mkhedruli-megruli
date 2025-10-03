@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { mkhedruliToLatinized } from '@/utils/transliterate'
+import { useState, useEffect, useMemo } from 'react'
+import { mkhedruliToLatinized, latinizedToMkhedruli, isGeorgianScript } from '@/utils/transliterate'
 import Navbar from '@/components/Navbar'
 import SettingsModal from '@/components/SettingsModal'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -112,6 +112,18 @@ export default function Home() {
   const hasApiKey = () => {
     return openaiKey.length > 0 || anthropicKey.length > 0
   }
+
+  // Live transliteration for input
+  const inputTransliteration = useMemo(() => {
+    if (!mingrelianInput.trim()) return ''
+    
+    const isGeorgian = isGeorgianScript(mingrelianInput)
+    if (isGeorgian) {
+      return mkhedruliToLatinized(mingrelianInput)
+    } else {
+      return latinizedToMkhedruli(mingrelianInput)
+    }
+  }, [mingrelianInput])
 
   const handleTranslate = async () => {
     const provider = getProvider()
@@ -309,12 +321,19 @@ export default function Home() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t('mingrelianText')}
             </label>
-            <textarea
-              value={mingrelianInput}
-              onChange={(e) => setMingrelianInput(e.target.value)}
-              placeholder={t('mingrelianPlaceholder')}
-              className="w-full h-64 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
-            />
+            <div className="relative">
+              <textarea
+                value={mingrelianInput}
+                onChange={(e) => setMingrelianInput(e.target.value)}
+                placeholder={t('mingrelianPlaceholder')}
+                className="w-full h-64 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+              />
+              {inputTransliteration && (
+                <div className="absolute bottom-2 left-2 right-2 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic pointer-events-none border border-gray-200/50">
+                  {inputTransliteration}
+                </div>
+              )}
+            </div>
           </div>
           
           <button
@@ -378,8 +397,11 @@ export default function Home() {
                 <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
                   {t('mingrelian')}
                 </div>
-                <div className="text-lg text-gray-900">
-                  {result.mingrelian_mkhedruli} /{result.mingrelian_latinized}/
+                <div className="text-lg text-gray-900 leading-relaxed">
+                  {result.mingrelian_mkhedruli}
+                </div>
+                <div className="text-sm text-gray-400 italic mt-1">
+                  {result.mingrelian_latinized}
                 </div>
               </div>
 
@@ -388,15 +410,18 @@ export default function Home() {
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
                     {t('english')}
                   </div>
-                  <div className="text-lg text-gray-900">{result.english}</div>
+                  <div className="text-lg text-gray-900 leading-relaxed">{result.english}</div>
                 </div>
               ) : (
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
                     {t('georgian')}
                   </div>
-                  <div className="text-lg text-gray-900">
-                    {result.georgian} /{mkhedruliToLatinized(result.georgian)}/
+                  <div className="text-lg text-gray-900 leading-relaxed">
+                    {result.georgian}
+                  </div>
+                  <div className="text-sm text-gray-400 italic mt-1">
+                    {mkhedruliToLatinized(result.georgian)}
                   </div>
                 </div>
               )}
