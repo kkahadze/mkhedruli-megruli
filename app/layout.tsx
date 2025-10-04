@@ -8,6 +8,10 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Mkhedruli - Mingrelian Translator',
   description: 'Translate Mingrelian text to Georgian and English',
+  icons: {
+    icon: '/mkhedruli-logo.png',
+    apple: '/mkhedruli-logo.png',
+  },
 }
 
 export default function RootLayout({
