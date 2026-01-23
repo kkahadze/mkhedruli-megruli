@@ -9,10 +9,14 @@ interface SettingsModalProps {
   setOpenaiKey: (key: string) => void
   anthropicKey: string
   setAnthropicKey: (key: string) => void
+  geminiKey: string
+  setGeminiKey: (key: string) => void
   rememberOpenai: boolean
   setRememberOpenai: (remember: boolean) => void
   rememberAnthropic: boolean
   setRememberAnthropic: (remember: boolean) => void
+  rememberGemini: boolean
+  setRememberGemini: (remember: boolean) => void
   selectedModel: string
   setSelectedModel: (model: string) => void
   models: Array<{ value: string; label: string; provider: string }>
@@ -26,10 +30,14 @@ export default function SettingsModal({
   setOpenaiKey,
   anthropicKey,
   setAnthropicKey,
+  geminiKey,
+  setGeminiKey,
   rememberOpenai,
   setRememberOpenai,
   rememberAnthropic,
   setRememberAnthropic,
+  rememberGemini,
+  setRememberGemini,
   selectedModel,
   setSelectedModel,
   models,
@@ -122,6 +130,32 @@ export default function SettingsModal({
                     {t('getKeyAt')} <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">console.anthropic.com</a>
                   </p>
                 </div>
+
+                {/* Gemini Key */}
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('geminiApiKey')}
+                  </label>
+                  <input
+                    type="password"
+                    value={geminiKey}
+                    onChange={(e) => setGeminiKey(e.target.value)}
+                    placeholder={t('geminiPlaceholder')}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                  />
+                  <label className="mt-2 flex items-center text-sm text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={rememberGemini}
+                      onChange={(e) => setRememberGemini(e.target.checked)}
+                      className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    {t('rememberKey')}
+                  </label>
+                  <p className="mt-2 text-xs text-gray-500">
+                    {t('getKeyAt')} <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">aistudio.google.com</a>
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -141,7 +175,11 @@ export default function SettingsModal({
                 >
                   {models.map((model) => (
                     <option key={model.value} value={model.value}>
-                      {model.label} ({model.provider === 'openai' ? 'OpenAI' : 'Anthropic'})
+                      {model.label} ({
+                        model.provider === 'openai' ? 'OpenAI' : 
+                        model.provider === 'anthropic' ? 'Anthropic' : 
+                        'Gemini'
+                      })
                     </option>
                   ))}
                 </select>

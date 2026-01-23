@@ -8,9 +8,13 @@ export const translations = {
     // Main page - Input section
     mingrelianText: 'Mingrelian Text',
     mingrelianPlaceholder: 'Enter Mingrelian text (latinized or mkhedruli)...',
+    sourceText: 'Source Text',
+    sourceTextPlaceholder: 'Enter text to translate...',
     translate: 'Translate',
     translating: 'Translating...',
     translationWillAppear: 'Translation will appear here',
+    sourceLanguage: 'Source Language',
+    targetLanguage: 'Target Language',
     
     // Main page - Output section
     mingrelian: 'Mingrelian',
@@ -30,6 +34,8 @@ export const translations = {
     openaiPlaceholder: 'sk-...',
     anthropicApiKey: 'Anthropic API Key',
     anthropicPlaceholder: 'sk-ant-...',
+    geminiApiKey: 'Gemini API Key',
+    geminiPlaceholder: 'AI...',
     rememberKey: 'Remember this key in browser',
     getKeyAt: 'Get your key at',
     
@@ -63,9 +69,13 @@ export const translations = {
     // Main page - Input section
     mingrelianText: 'მეგრული ტექსტი',
     mingrelianPlaceholder: 'შეიყვანეთ მეგრული ტექსტი (ლათინური ან მხედრული)...',
+    sourceText: 'საწყისი ტექსტი',
+    sourceTextPlaceholder: 'შეიყვანეთ ტექსტი თარგმნისთვის...',
     translate: 'თარგმნა',
     translating: 'თარგმნა მიმდინარეობს...',
     translationWillAppear: 'თარგმანი გამოჩნდება აქ',
+    sourceLanguage: 'საწყისი ენა',
+    targetLanguage: 'სამიზნე ენა',
     
     // Main page - Output section
     mingrelian: 'მეგრული',
@@ -85,6 +95,8 @@ export const translations = {
     openaiPlaceholder: 'sk-...',
     anthropicApiKey: 'Anthropic API გასაღები',
     anthropicPlaceholder: 'sk-ant-...',
+    geminiApiKey: 'Gemini API გასაღები',
+    geminiPlaceholder: 'AI...',
     rememberKey: 'დამახსოვრება ბრაუზერში',
     getKeyAt: 'მიიღეთ გასაღები',
     

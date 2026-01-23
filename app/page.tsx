@@ -6,19 +6,24 @@ import Navbar from '@/components/Navbar'
 import SettingsModal from '@/components/SettingsModal'
 import { useLanguage } from '@/contexts/LanguageContext'
 
+// Toggle this to show/hide settings UI (API keys will be handled server-side when false)
+const SHOW_SETTINGS = true
+
 export default function Home() {
   const { t } = useLanguage()
-  const [mingrelianInput, setMingrelianInput] = useState('')
-  const [targetLanguage, setTargetLanguage] = useState<'english' | 'georgian'>('english')
-  const [selectedModel, setSelectedModel] = useState('gpt-5-2025-08-07')
+  const [inputText, setInputText] = useState('')
+  const [sourceLanguage, setSourceLanguage] = useState<'mingrelian' | 'georgian' | 'english'>('mingrelian')
+  const [targetLanguage, setTargetLanguage] = useState<'mingrelian' | 'georgian' | 'english'>('english')
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash-lite')
   const [openaiKey, setOpenaiKey] = useState('')
   const [anthropicKey, setAnthropicKey] = useState('')
+  const [geminiKey, setGeminiKey] = useState('')
   const [rememberOpenai, setRememberOpenai] = useState(false)
   const [rememberAnthropic, setRememberAnthropic] = useState(false)
+  const [rememberGemini, setRememberGemini] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   
   const [loading, setLoading] = useState(false)
-  const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
   const [result, setResult] = useState<{
     mingrelian_latinized: string
@@ -27,39 +32,17 @@ export default function Home() {
     english: string
   } | null>(null)
 
-  // Smart progress bar animation - very slow at start
-  useEffect(() => {
-    if (!loading) {
-      setProgress(0)
-      return
-    }
-
-    setProgress(0)
-    let currentProgress = 0
-    const interval = setInterval(() => {
-      // Very slow exponential progress: adds only 0.3% of remaining distance
-      // Takes ~60 seconds to reach 80%, then plateaus around 88-90%
-      const increment = (90 - currentProgress) * 0.003
-      currentProgress += Math.max(increment, 0.01)
-
-      if (currentProgress >= 90) {
-        currentProgress = 90 // Plateau at 90%
-      }
-
-      setProgress(Math.min(currentProgress, 90))
-    }, 200) // Update every 200ms
-
-    return () => clearInterval(interval)
-  }, [loading])
-
   // Load saved preferences
   useEffect(() => {
     const savedOpenaiKey = localStorage.getItem('mingrelian_openai_key')
     const savedAnthropicKey = localStorage.getItem('mingrelian_anthropic_key')
+    const savedGeminiKey = localStorage.getItem('mingrelian_gemini_key')
     const savedModel = localStorage.getItem('mingrelian_model')
+    const savedSourceLang = localStorage.getItem('mingrelian_source_lang')
     const savedTargetLang = localStorage.getItem('mingrelian_target_lang')
     const rememberOpenai = localStorage.getItem('mingrelian_remember_openai_key') === 'true'
     const rememberAnthropic = localStorage.getItem('mingrelian_remember_anthropic_key') === 'true'
+    const rememberGemini = localStorage.getItem('mingrelian_remember_gemini_key') === 'true'
 
     if (savedOpenaiKey && rememberOpenai) {
       setOpenaiKey(savedOpenaiKey)
@@ -69,14 +52,23 @@ export default function Home() {
       setAnthropicKey(savedAnthropicKey)
       setRememberAnthropic(true)
     }
+    if (savedGeminiKey && rememberGemini) {
+      setGeminiKey(savedGeminiKey)
+      setRememberGemini(true)
+    }
     if (savedModel) setSelectedModel(savedModel)
-    if (savedTargetLang) setTargetLanguage(savedTargetLang as 'english' | 'georgian')
+    if (savedSourceLang) setSourceLanguage(savedSourceLang as 'mingrelian' | 'georgian' | 'english')
+    if (savedTargetLang) setTargetLanguage(savedTargetLang as 'mingrelian' | 'georgian' | 'english')
   }, [])
 
   // Save preferences when they change
   useEffect(() => {
     localStorage.setItem('mingrelian_model', selectedModel)
   }, [selectedModel])
+
+  useEffect(() => {
+    localStorage.setItem('mingrelian_source_lang', sourceLanguage)
+  }, [sourceLanguage])
 
   useEffect(() => {
     localStorage.setItem('mingrelian_target_lang', targetLanguage)
@@ -100,10 +92,22 @@ export default function Home() {
     }
   }, [rememberAnthropic, anthropicKey])
 
+  useEffect(() => {
+    localStorage.setItem('mingrelian_remember_gemini_key', rememberGemini.toString())
+    if (rememberGemini && geminiKey) {
+      localStorage.setItem('mingrelian_gemini_key', geminiKey)
+    } else {
+      localStorage.removeItem('mingrelian_gemini_key')
+    }
+  }, [rememberGemini, geminiKey])
+
   const models = [
     { value: 'gpt-5-2025-08-07', label: 'GPT-5', provider: 'openai' },
     { value: 'gpt-5-pro-2025-10-06', label: 'GPT-5 Pro', provider: 'openai' },
+    { value: 'gpt-5.2', label: 'GPT-5.2', provider: 'openai' },
     { value: 'claude-sonnet-4-5-20250929', label: 'Claude Sonnet 4.5', provider: 'anthropic' },
+    { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash Preview', provider: 'gemini' },
+    { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite', provider: 'gemini' },
   ]
 
   const getProvider = () => {
@@ -111,34 +115,48 @@ export default function Home() {
   }
 
   const hasApiKey = () => {
-    return openaiKey.length > 0 || anthropicKey.length > 0
+    if (!SHOW_SETTINGS) return true  // Always return true when settings hidden (server handles API key)
+    return openaiKey.length > 0 || anthropicKey.length > 0 || geminiKey.length > 0
   }
 
-  // Live transliteration for input
+  // Live transliteration for input (only for Georgian/Mingrelian)
   const inputTransliteration = useMemo(() => {
-    if (!mingrelianInput.trim()) return ''
+    if (!inputText.trim()) return ''
+    if (sourceLanguage === 'english') return ''
     
-    const isGeorgian = isGeorgianScript(mingrelianInput)
+    const isGeorgian = isGeorgianScript(inputText)
     if (isGeorgian) {
-      return mkhedruliToLatinized(mingrelianInput)
+      return mkhedruliToLatinized(inputText)
     } else {
-      return latinizedToMkhedruli(mingrelianInput)
+      return latinizedToMkhedruli(inputText)
     }
-  }, [mingrelianInput])
+  }, [inputText, sourceLanguage])
 
   const handleTranslate = async () => {
     const provider = getProvider()
-    const apiKey = provider === 'anthropic' ? anthropicKey : openaiKey
+    
+    // Use empty string for api_key when settings hidden or for Gemini (backend will use server-side key)
+    const apiKey = SHOW_SETTINGS 
+      ? (provider === 'anthropic' ? anthropicKey : 
+         provider === 'gemini' ? (geminiKey || '') : openaiKey)
+      : ''
 
-    console.log('Starting translation...', { provider, model: selectedModel, targetLanguage })
+    console.log('Starting translation...', { provider, model: selectedModel, sourceLanguage, targetLanguage })
 
-    if (!apiKey) {
-      setError(`${t('noApiKey')} ${provider === 'anthropic' ? 'Anthropic' : 'OpenAI'} ${t('apiKey')}`)
+    // Only require API key for OpenAI and Anthropic (Gemini uses server-side key as fallback)
+    if (SHOW_SETTINGS && !apiKey && provider !== 'gemini') {
+      const providerName = provider === 'anthropic' ? 'Anthropic' : 'OpenAI'
+      setError(`${t('noApiKey')} ${providerName} ${t('apiKey')}`)
       return
     }
 
-    if (!mingrelianInput.trim()) {
+    if (!inputText.trim()) {
       setError(t('enterMingrelian'))
+      return
+    }
+
+    if (sourceLanguage === targetLanguage) {
+      setError('Source and target languages must be different')
       return
     }
 
@@ -146,8 +164,9 @@ export default function Home() {
     setLoading(true)
 
     const requestBody = {
-      prompt: mingrelianInput,
+      prompt: inputText,
       api_key: apiKey,
+      source_language: sourceLanguage,
       target_language: targetLanguage,
       model: selectedModel,
       provider: provider
@@ -216,11 +235,7 @@ export default function Home() {
             try {
               const event = JSON.parse(jsonStr)
               
-              if (event.progress) {
-                // ✨ FIRST API CALL COMPLETE - Jump to 50%
-                console.log('Progress update:', event.progress, event.message)
-                setProgress(event.progress)
-              } else if (event.result) {
+              if (event.result) {
                 // Final result received
                 console.log('Translation successful:', event.result)
                 finalResult = event.result
@@ -238,12 +253,6 @@ export default function Home() {
       }
 
       if (finalResult) {
-        // Data received! Rush to 100% in ~1 second
-        setTimeout(() => setProgress(100), 50)
-        
-        // Wait for animation to complete before showing result
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
         setResult(finalResult)
       } else {
         setError(t('noResult'))
@@ -265,9 +274,12 @@ export default function Home() {
       localStorage.clear()
       setOpenaiKey('')
       setAnthropicKey('')
+      setGeminiKey('')
       setRememberOpenai(false)
       setRememberAnthropic(false)
+      setRememberGemini(false)
       setSelectedModel('gpt-5-2025-08-07')
+      setSourceLanguage('mingrelian')
       setTargetLanguage('english')
     }
   }
@@ -275,59 +287,104 @@ export default function Home() {
   return (
     <>
       <Navbar 
-        onSettingsClick={() => setIsSettingsOpen(true)}
+        onSettingsClick={SHOW_SETTINGS ? () => setIsSettingsOpen(true) : undefined}
         hasApiKey={hasApiKey()}
+        showSettings={SHOW_SETTINGS}
       />
       
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        openaiKey={openaiKey}
-        setOpenaiKey={setOpenaiKey}
-        anthropicKey={anthropicKey}
-        setAnthropicKey={setAnthropicKey}
-        rememberOpenai={rememberOpenai}
-        setRememberOpenai={setRememberOpenai}
-        rememberAnthropic={rememberAnthropic}
-        setRememberAnthropic={setRememberAnthropic}
-        selectedModel={selectedModel}
-        setSelectedModel={setSelectedModel}
-        models={models}
-        onClearSettings={clearSettings}
-      />
+      {SHOW_SETTINGS && (
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          openaiKey={openaiKey}
+          setOpenaiKey={setOpenaiKey}
+          anthropicKey={anthropicKey}
+          setAnthropicKey={setAnthropicKey}
+          geminiKey={geminiKey}
+          setGeminiKey={setGeminiKey}
+          rememberOpenai={rememberOpenai}
+          setRememberOpenai={setRememberOpenai}
+          rememberAnthropic={rememberAnthropic}
+          setRememberAnthropic={setRememberAnthropic}
+          rememberGemini={rememberGemini}
+          setRememberGemini={setRememberGemini}
+          selectedModel={selectedModel}
+          setSelectedModel={setSelectedModel}
+          models={models}
+          onClearSettings={clearSettings}
+        />
+      )}
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Show a notice if no API key is configured */}
-        {!hasApiKey() && (
-          <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <div>
-                <h3 className="text-sm font-medium text-amber-900">{t('apiKeyRequired')}</h3>
-                <p className="mt-1 text-sm text-amber-700">
-                  {t('apiKeyRequiredMessage')}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Language Selector Bar */}
+        <div className="mb-6 flex items-center justify-center gap-3 rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
+          <select
+            value={sourceLanguage}
+            onChange={(e) => setSourceLanguage(e.target.value as 'mingrelian' | 'georgian' | 'english')}
+            className="flex-1 rounded-md border-0 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          >
+            <option value="mingrelian">{t('mingrelian')}</option>
+            <option value="georgian">{t('georgian')}</option>
+            <option value="english">{t('english')}</option>
+          </select>
+
+          <button
+            onClick={() => {
+              // Swap languages
+              const tempLang = sourceLanguage
+              setSourceLanguage(targetLanguage)
+              setTargetLanguage(tempLang)
+              
+              // Swap text content if there's a result
+              if (result) {
+                let outputText = ''
+                
+                // Get the output text based on current target language
+                if (targetLanguage === 'mingrelian') {
+                  outputText = result.mingrelian_mkhedruli || result.mingrelian_latinized
+                } else if (targetLanguage === 'georgian') {
+                  outputText = result.georgian
+                } else if (targetLanguage === 'english') {
+                  outputText = result.english
+                }
+                
+                // Swap: output becomes new input
+                setInputText(outputText)
+                // Clear result so user can translate again
+                setResult(null)
+              }
+            }}
+            className="rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+            title="Swap languages"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+          </button>
+
+          <select
+            value={targetLanguage}
+            onChange={(e) => setTargetLanguage(e.target.value as 'mingrelian' | 'georgian' | 'english')}
+            className="flex-1 rounded-md border-0 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          >
+            <option value="mingrelian">{t('mingrelian')}</option>
+            <option value="georgian">{t('georgian')}</option>
+            <option value="english">{t('english')}</option>
+          </select>
+        </div>
 
         {/* Main Translation Interface */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Input Section */}
         <div className="space-y-4">
-          <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('mingrelianText')}
-            </label>
+
+          <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
             <div className="relative">
               <textarea
-                value={mingrelianInput}
-                onChange={(e) => setMingrelianInput(e.target.value)}
-                placeholder={t('mingrelianPlaceholder')}
-                className="w-full h-64 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder={t('sourceTextPlaceholder')}
+                className="w-full h-40 md:h-64 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
               />
               {inputTransliteration && (
                 <div className="absolute bottom-2 left-2 right-2 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic pointer-events-none border border-gray-200/50">
@@ -337,23 +394,23 @@ export default function Home() {
             </div>
           </div>
           
-          <button
-            onClick={handleTranslate}
-            disabled={loading}
-            className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? t('translating') : t('translate')}
-          </button>
-
-          {/* Smart Progress Bar */}
-          {loading && (
-            <div className="w-full h-1 bg-gray-200 rounded-full overflow-hidden shadow-sm">
-              <div
-                className={`h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all ease-out ${
-                  progress >= 95 ? 'duration-1000' : 'duration-300'
-                }`}
-                style={{ width: `${progress}%` }}
-              />
+          {!loading ? (
+            <button
+              onClick={handleTranslate}
+              className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
+            >
+              {t('translate')}
+            </button>
+          ) : (
+            <div className="flex items-center justify-center gap-3 py-4 rounded-md bg-gray-50 border border-gray-200">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+              <span className="text-gray-600 text-sm font-medium">
+                {t('translating')}...
+              </span>
             </div>
           )}
 
@@ -366,64 +423,45 @@ export default function Home() {
 
         {/* Output Section */}
         <div>
-          {/* Target Language Selector - Centered */}
-          <div className="mb-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm flex justify-center">
-            <div className="inline-flex rounded-lg border border-gray-200 p-1">
-              <button
-                onClick={() => setTargetLanguage('english')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  targetLanguage === 'english'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {t('english')}
-              </button>
-              <button
-                onClick={() => setTargetLanguage('georgian')}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  targetLanguage === 'georgian'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {t('georgian')}
-              </button>
-            </div>
-          </div>
-
           {result && (
             <div className="space-y-4">
-              <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                  {t('mingrelian')}
-                </div>
-                <div className="text-lg text-gray-900 leading-relaxed">
-                  {result.mingrelian_mkhedruli}
-                </div>
-                <div className="text-sm text-gray-400 italic mt-1">
-                  {result.mingrelian_latinized}
-                </div>
-              </div>
-
-              {targetLanguage === 'english' ? (
-                <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+              {/* Show result based on target language */}
+              {targetLanguage === 'mingrelian' && (
+                <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                    {t('english')}
+                    {t('mingrelian')}
                   </div>
-                  <div className="text-lg text-gray-900 leading-relaxed">{result.english}</div>
+                  <div className="text-lg text-gray-900 leading-relaxed">
+                    {result.mingrelian_mkhedruli}
+                  </div>
+                  <div className="text-sm text-gray-400 italic mt-1">
+                    {result.mingrelian_latinized}
+                  </div>
                 </div>
-              ) : (
-                <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+              )}
+
+              {targetLanguage === 'georgian' && (
+                <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
                     {t('georgian')}
                   </div>
                   <div className="text-lg text-gray-900 leading-relaxed">
                     {result.georgian}
                   </div>
-                  <div className="text-sm text-gray-400 italic mt-1">
-                    {mkhedruliToLatinized(result.georgian)}
+                  {result.georgian && (
+                    <div className="text-sm text-gray-400 italic mt-1">
+                      {mkhedruliToLatinized(result.georgian)}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {targetLanguage === 'english' && (
+                <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
+                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                    {t('english')}
                   </div>
+                  <div className="text-lg text-gray-900 leading-relaxed">{result.english}</div>
                 </div>
               )}
             </div>
