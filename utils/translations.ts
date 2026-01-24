@@ -4,6 +4,7 @@ export const translations = {
   en: {
     // Navbar
     settings: 'Settings',
+    appTitle: 'Mingrelian Translator',
     
     // Main page - Input section
     mingrelianText: 'Mingrelian Text',
@@ -65,6 +66,7 @@ export const translations = {
   ka: {
     // Navbar
     settings: 'პარამეტრები',
+    appTitle: 'მეგრული მთარგმნელი',
     
     // Main page - Input section
     mingrelianText: 'მეგრული ტექსტი',

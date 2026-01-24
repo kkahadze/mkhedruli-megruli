@@ -28,13 +28,8 @@ export default function Navbar({ onSettingsClick, hasApiKey, showSettings = true
               height={40}
               className="rounded"
             />
-            <h1 className="relative text-2xl font-bold text-gray-900 cursor-default group">
-              <span className="inline-block transition-opacity duration-300 group-hover:opacity-0">
-                Mkhedruli
-              </span>
-              <span className="absolute inset-0 inline-block opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                მხედრული
-              </span>
+            <h1 className="text-2xl font-bold text-gray-900 cursor-default">
+              {t('appTitle')}
             </h1>
           </div>
           

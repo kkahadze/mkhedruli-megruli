@@ -32,6 +32,33 @@ export default function Home() {
     english: string
   } | null>(null)
 
+  const languageOptions = useMemo(
+    () =>
+      [
+        { value: 'mingrelian' as const, label: t('mingrelian') },
+        { value: 'georgian' as const, label: t('georgian') },
+        { value: 'english' as const, label: t('english') },
+      ],
+    [t]
+  )
+
+  const setSourceLanguageSafe = (next: 'mingrelian' | 'georgian' | 'english') => {
+    if (next === targetLanguage) {
+      // Pick the first different language as the new target to avoid source==target
+      const fallback = (['mingrelian', 'georgian', 'english'] as const).find(l => l !== next)
+      if (fallback) setTargetLanguage(fallback)
+    }
+    setSourceLanguage(next)
+  }
+
+  const setTargetLanguageSafe = (next: 'mingrelian' | 'georgian' | 'english') => {
+    if (next === sourceLanguage) {
+      const fallback = (['mingrelian', 'georgian', 'english'] as const).find(l => l !== next)
+      if (fallback) setSourceLanguage(fallback)
+    }
+    setTargetLanguage(next)
+  }
+
   // Load saved preferences
   useEffect(() => {
     const savedOpenaiKey = localStorage.getItem('mingrelian_openai_key')
@@ -317,16 +344,27 @@ export default function Home() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Language Selector Bar */}
-        <div className="mb-6 flex items-center justify-center gap-3 rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
-          <select
-            value={sourceLanguage}
-            onChange={(e) => setSourceLanguage(e.target.value as 'mingrelian' | 'georgian' | 'english')}
-            className="flex-1 rounded-md border-0 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-          >
-            <option value="mingrelian">{t('mingrelian')}</option>
-            <option value="georgian">{t('georgian')}</option>
-            <option value="english">{t('english')}</option>
-          </select>
+        <div className="mb-6 flex items-center justify-center gap-3 rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-3 shadow-md">
+          {/* Source language tabs */}
+          <div className="flex-1 overflow-x-auto">
+            <div className="flex items-center gap-3 whitespace-nowrap px-1">
+              {languageOptions.map((opt) => (
+                <button
+                  key={`src-${opt.value}`}
+                  type="button"
+                  onClick={() => setSourceLanguageSafe(opt.value)}
+                  className={[
+                    'pb-1 text-sm font-semibold transition-colors',
+                    sourceLanguage === opt.value
+                      ? 'text-blue-700 border-b-2 border-blue-600'
+                      : 'text-gray-700 hover:text-gray-900 border-b-2 border-transparent',
+                  ].join(' ')}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <button
             onClick={() => {
@@ -362,15 +400,26 @@ export default function Home() {
             </svg>
           </button>
 
-          <select
-            value={targetLanguage}
-            onChange={(e) => setTargetLanguage(e.target.value as 'mingrelian' | 'georgian' | 'english')}
-            className="flex-1 rounded-md border-0 bg-transparent px-3 py-2 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-          >
-            <option value="mingrelian">{t('mingrelian')}</option>
-            <option value="georgian">{t('georgian')}</option>
-            <option value="english">{t('english')}</option>
-          </select>
+          {/* Target language tabs */}
+          <div className="flex-1 overflow-x-auto">
+            <div className="flex items-center justify-end gap-3 whitespace-nowrap px-1">
+              {languageOptions.map((opt) => (
+                <button
+                  key={`tgt-${opt.value}`}
+                  type="button"
+                  onClick={() => setTargetLanguageSafe(opt.value)}
+                  className={[
+                    'pb-1 text-sm font-semibold transition-colors',
+                    targetLanguage === opt.value
+                      ? 'text-blue-700 border-b-2 border-blue-600'
+                      : 'text-gray-700 hover:text-gray-900 border-b-2 border-transparent',
+                  ].join(' ')}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Main Translation Interface */}
