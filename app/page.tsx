@@ -343,6 +343,13 @@ export default function Home() {
       )}
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* SEO intro (visible, non-spammy) */}
+        <div className="mb-4 text-sm text-gray-600">
+          <span className="font-medium text-gray-900">Mingrelian Translator</span>
+          {' — '}
+          Translate Mingrelian (Megrelian / Megruli), Georgian, and English.
+        </div>
+
         {/* Language Selector Bar */}
         <div className="mb-6 flex items-center justify-center gap-3 rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-3 shadow-md">
           {/* Source language tabs */}
