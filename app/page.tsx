@@ -351,17 +351,17 @@ export default function Home() {
         </div>
 
         {/* Language Selector Bar */}
-        <div className="mb-6 flex items-center justify-center gap-3 rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-3 shadow-md">
+        <div className="mb-6 flex flex-col items-stretch justify-center gap-3 rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-3 shadow-md sm:flex-row sm:items-center">
           {/* Source language tabs */}
-          <div className="flex-1 overflow-x-auto">
-            <div className="flex items-center gap-3 whitespace-nowrap px-1">
+          <div className="w-full sm:flex-1">
+            <div className="flex flex-wrap items-center justify-center gap-3 px-1 sm:justify-start">
               {languageOptions.map((opt) => (
                 <button
                   key={`src-${opt.value}`}
                   type="button"
                   onClick={() => setSourceLanguageSafe(opt.value)}
                   className={[
-                    'pb-1 text-sm font-semibold transition-colors',
+                    'whitespace-nowrap pb-1 text-sm font-semibold transition-colors',
                     sourceLanguage === opt.value
                       ? 'text-blue-700 border-b-2 border-blue-600'
                       : 'text-gray-700 hover:text-gray-900 border-b-2 border-transparent',
@@ -399,7 +399,7 @@ export default function Home() {
                 setResult(null)
               }
             }}
-            className="rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+            className="self-center shrink-0 rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
             title="Swap languages"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -408,15 +408,15 @@ export default function Home() {
           </button>
 
           {/* Target language tabs */}
-          <div className="flex-1 overflow-x-auto">
-            <div className="flex items-center justify-end gap-3 whitespace-nowrap px-1">
+          <div className="w-full sm:flex-1">
+            <div className="flex flex-wrap items-center justify-center gap-3 px-1 sm:justify-end">
               {languageOptions.map((opt) => (
                 <button
                   key={`tgt-${opt.value}`}
                   type="button"
                   onClick={() => setTargetLanguageSafe(opt.value)}
                   className={[
-                    'pb-1 text-sm font-semibold transition-colors',
+                    'whitespace-nowrap pb-1 text-sm font-semibold transition-colors',
                     targetLanguage === opt.value
                       ? 'text-blue-700 border-b-2 border-blue-600'
                       : 'text-gray-700 hover:text-gray-900 border-b-2 border-transparent',
