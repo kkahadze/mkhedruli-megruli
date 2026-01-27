@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 
@@ -55,6 +56,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50`}>
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-1B6NY0YVJH"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-1B6NY0YVJH');
+          `}
+        </Script>
+
         <LanguageProvider>
           {children}
         </LanguageProvider>
