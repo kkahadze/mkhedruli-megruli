@@ -160,6 +160,7 @@ export default function Home() {
   }, [inputText, sourceLanguage])
 
   const handleTranslate = async () => {
+    const startTime = performance.now()
     const provider = getProvider()
     
     // Use empty string for api_key when settings hidden or for Gemini (backend will use server-side key)
@@ -168,7 +169,7 @@ export default function Home() {
          provider === 'gemini' ? (geminiKey || '') : openaiKey)
       : ''
 
-    console.log('Starting translation...', { provider, model: selectedModel, sourceLanguage, targetLanguage })
+    console.log('🚀 Starting translation...', { provider, model: selectedModel, sourceLanguage, targetLanguage })
 
     // Only require API key for OpenAI and Anthropic (Gemini uses server-side key as fallback)
     if (SHOW_SETTINGS && !apiKey && provider !== 'gemini') {
@@ -280,12 +281,18 @@ export default function Home() {
       }
 
       if (finalResult) {
+        const endTime = performance.now()
+        const duration = ((endTime - startTime) / 1000).toFixed(2)
+        console.log(`✅ Translation completed in ${duration}s`)
+        console.log(`⏱️  Total time: ${duration} seconds (${Math.round(endTime - startTime)}ms)`)
         setResult(finalResult)
       } else {
         setError(t('noResult'))
       }
     } catch (err: any) {
-      console.error('Network error:', err)
+      const endTime = performance.now()
+      const duration = ((endTime - startTime) / 1000).toFixed(2)
+      console.error(`❌ Translation failed after ${duration}s:`, err)
       if (err.name === 'AbortError') {
         setError(t('timeout'))
       } else {
@@ -487,11 +494,15 @@ export default function Home() {
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
                     {t('mingrelian')}
                   </div>
-                  <div className="text-lg text-gray-900 leading-relaxed">
-                    {result.mingrelian_mkhedruli}
-                  </div>
-                  <div className="text-sm text-gray-400 italic mt-1">
-                    {result.mingrelian_latinized}
+                  <div className="relative">
+                    <div className="text-lg text-gray-900 leading-relaxed min-h-[120px] pb-8">
+                      {result.mingrelian_mkhedruli}
+                    </div>
+                    {result.mingrelian_latinized && (
+                      <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic border border-gray-200/50">
+                        {result.mingrelian_latinized}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -501,14 +512,16 @@ export default function Home() {
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
                     {t('georgian')}
                   </div>
-                  <div className="text-lg text-gray-900 leading-relaxed">
-                    {result.georgian}
-                  </div>
-                  {result.georgian && (
-                    <div className="text-sm text-gray-400 italic mt-1">
-                      {mkhedruliToLatinized(result.georgian)}
+                  <div className="relative">
+                    <div className="text-lg text-gray-900 leading-relaxed min-h-[120px] pb-8">
+                      {result.georgian}
                     </div>
-                  )}
+                    {result.georgian && (
+                      <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic border border-gray-200/50">
+                        {mkhedruliToLatinized(result.georgian)}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
