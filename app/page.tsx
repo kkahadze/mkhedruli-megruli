@@ -183,6 +183,11 @@ export default function Home() {
       return
     }
 
+    if (inputText.length > 100) {
+      setError(`Text is too long (${inputText.length} characters). Please limit your input to 100 characters for better translation quality.`)
+      return
+    }
+
     if (sourceLanguage === targetLanguage) {
       setError('Source and target languages must be different')
       return
@@ -454,6 +459,12 @@ export default function Home() {
                   {inputTransliteration}
                 </div>
               )}
+            </div>
+            {/* Character counter */}
+            <div className="mt-2 text-right">
+              <span className={`text-xs ${inputText.length > 100 ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+                {inputText.length}/100 characters
+              </span>
             </div>
           </div>
           
