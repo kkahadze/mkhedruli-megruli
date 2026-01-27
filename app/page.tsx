@@ -214,8 +214,8 @@ export default function Home() {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => {
         controller.abort()
-        console.error('Request timed out after 4 minutes')
-      }, 240000) // 4 minute timeout
+        console.error('Request timed out after 1 minute')
+      }, 60000) // 1 minute timeout
 
       // Switch between local and production
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://argo-translator.onrender.com'
