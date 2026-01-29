@@ -554,6 +554,27 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      {/* Contact Section */}
+      <div className="mt-24 pt-8 border-t border-gray-200">
+        <div className="rounded-lg border border-blue-100 bg-blue-50/50 backdrop-blur-sm p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">
+            {t('contactTitle')}
+          </h3>
+          <p className="text-sm text-gray-700 mb-3">
+            {t('contactMessage')}
+          </p>
+          <a 
+            href="mailto:konstantinekahadze@gmail.com"
+            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition-colors break-all sm:break-normal"
+          >
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <span className="break-all">konstantinekahadze@gmail.com</span>
+          </a>
+        </div>
+      </div>
     </main>
     </>
   )

@@ -62,6 +62,10 @@ export const translations = {
     networkError: 'Network error',
     apiError: 'API error',
     noResult: 'No result received from server',
+    
+    // Contact
+    contactTitle: 'Questions or Feedback',
+    contactMessage: 'For questions or feedback about the Mingrelian Translator, please contact:',
   },
   ka: {
     // Navbar
@@ -124,6 +128,10 @@ export const translations = {
     networkError: 'ქსელის შეცდომა',
     apiError: 'API შეცდომა',
     noResult: 'სერვერიდან პასუხი არ მიღებულა',
+    
+    // Contact
+    contactTitle: 'კითხვები ან გამოხმაურება',
+    contactMessage: 'კითხვების ან გამოხმაურების შემთხვევაში მეგრული მთარგმნელის შესახებ, გთხოვთ დაუკავშირდეთ:',
   },
 }
 
