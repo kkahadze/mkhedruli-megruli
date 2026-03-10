@@ -14,7 +14,7 @@ export default function Home() {
   const [inputText, setInputText] = useState('')
   const [sourceLanguage, setSourceLanguage] = useState<'mingrelian' | 'georgian' | 'english'>('mingrelian')
   const [targetLanguage, setTargetLanguage] = useState<'mingrelian' | 'georgian' | 'english'>('english')
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash-lite')
+  const [selectedModel, setSelectedModel] = useState('gemini-3.1-flash-lite-preview')
   const [openaiKey, setOpenaiKey] = useState('')
   const [anthropicKey, setAnthropicKey] = useState('')
   const [geminiKey, setGeminiKey] = useState('')
@@ -134,7 +134,7 @@ export default function Home() {
     { value: 'gpt-5.2', label: 'GPT-5.2', provider: 'openai' },
     { value: 'claude-sonnet-4-5-20250929', label: 'Claude Sonnet 4.5', provider: 'anthropic' },
     { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash Preview', provider: 'gemini' },
-    { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite', provider: 'gemini' },
+    { value: 'gemini-3.1-flash-lite-preview', label: 'Gemini 3.1 Flash Lite', provider: 'gemini' },
   ]
 
   const getProvider = () => {
@@ -507,7 +507,7 @@ export default function Home() {
                   </div>
                   <div className="relative">
                     <div className="text-lg text-gray-900 leading-relaxed min-h-[120px] pb-8">
-                      {result.mingrelian_mkhedruli}
+                      {result.mingrelian_mkhedruli || (result.mingrelian_latinized && latinizedToMkhedruli(result.mingrelian_latinized))}
                     </div>
                     {result.mingrelian_latinized && (
                       <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic border border-gray-200/50">
