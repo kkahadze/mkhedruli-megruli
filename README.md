@@ -1,11 +1,11 @@
 # Mkhedruli - Mingrelian Translator
 
-A modern Next.js application for translating Mingrelian text to Georgian and English using AI models (OpenAI GPT-5 and Anthropic Claude Sonnet 4.5).
+A modern Next.js application for translating Mingrelian text to Georgian and English using AI models, including the GPT-5.4 family and Anthropic Claude Sonnet 4.5.
 
 ## Features
 
 - 🌐 Translate Mingrelian to English or Georgian
-- 🤖 Support for multiple AI models (GPT-5, Claude Sonnet 4.5)
+- 🤖 Support for multiple AI models (GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5, Claude Sonnet 4.5)
 - 💾 Save API keys locally in browser
 - 🎨 Clean, minimalist UI with two-column layout
 - 📱 Responsive design
@@ -45,8 +45,8 @@ npm start
 
 ## Usage
 
-1. **Enter API Keys**: Add your OpenAI and/or Anthropic API keys
-2. **Select Model**: Choose between GPT-5 or Claude Sonnet 4.5
+1. **Enter API Keys (Optional)**: Add your OpenAI, Anthropic, or Gemini API keys if you want to override the server-side defaults
+2. **Select Model**: Choose between GPT-5.4 Nano (default), other GPT-5 variants, Claude Sonnet 4.5, or Gemini
 3. **Input Text**: Enter Mingrelian text in the left panel (latinized or mkhedruli script)
 4. **Choose Target**: Select English or Georgian as target language
 5. **Translate**: Click the translate button
@@ -80,7 +80,8 @@ mkhedruli-megruli/
 The application connects to the Argo translator API hosted at:
 `https://argo-translator.onrender.com/chat`
 
+If the backend is configured with provider API keys in its environment, end users do not need to supply their own keys for the default experience.
+
 ## License
 
 MIT
-

@@ -8,13 +8,16 @@ import { useLanguage } from '@/contexts/LanguageContext'
 
 // Toggle this to show/hide settings UI (API keys will be handled server-side when false)
 const SHOW_SETTINGS = true
+const DEFAULT_MODEL = 'gpt-5.4-nano'
+const SERVER_KEY_MODELS = new Set(['gpt-5.4-nano', 'gemini-3.1-flash-lite-preview'])
+const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gpt_5_4_nano_v1'
 
 export default function Home() {
   const { t } = useLanguage()
   const [inputText, setInputText] = useState('')
   const [sourceLanguage, setSourceLanguage] = useState<'mingrelian' | 'georgian' | 'english'>('mingrelian')
   const [targetLanguage, setTargetLanguage] = useState<'mingrelian' | 'georgian' | 'english'>('english')
-  const [selectedModel, setSelectedModel] = useState('gemini-3.1-flash-lite-preview')
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL)
   const [openaiKey, setOpenaiKey] = useState('')
   const [anthropicKey, setAnthropicKey] = useState('')
   const [geminiKey, setGeminiKey] = useState('')
@@ -65,6 +68,7 @@ export default function Home() {
     const savedAnthropicKey = localStorage.getItem('mingrelian_anthropic_key')
     const savedGeminiKey = localStorage.getItem('mingrelian_gemini_key')
     const savedModel = localStorage.getItem('mingrelian_model')
+    const modelMigrationApplied = localStorage.getItem(MODEL_MIGRATION_KEY) === 'true'
     const savedSourceLang = localStorage.getItem('mingrelian_source_lang')
     const savedTargetLang = localStorage.getItem('mingrelian_target_lang')
     const rememberOpenai = localStorage.getItem('mingrelian_remember_openai_key') === 'true'
@@ -83,7 +87,13 @@ export default function Home() {
       setGeminiKey(savedGeminiKey)
       setRememberGemini(true)
     }
-    if (savedModel) setSelectedModel(savedModel)
+    if (!modelMigrationApplied) {
+      setSelectedModel(DEFAULT_MODEL)
+      localStorage.setItem('mingrelian_model', DEFAULT_MODEL)
+      localStorage.setItem(MODEL_MIGRATION_KEY, 'true')
+    } else if (savedModel) {
+      setSelectedModel(savedModel)
+    }
     if (savedSourceLang) setSourceLanguage(savedSourceLang as 'mingrelian' | 'georgian' | 'english')
     if (savedTargetLang) setTargetLanguage(savedTargetLang as 'mingrelian' | 'georgian' | 'english')
   }, [])
@@ -129,6 +139,9 @@ export default function Home() {
   }, [rememberGemini, geminiKey])
 
   const models = [
+    { value: 'gpt-5.4-nano', label: 'GPT-5.4 Nano', provider: 'openai' },
+    { value: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', provider: 'openai' },
+    { value: 'gpt-5.4', label: 'GPT-5.4', provider: 'openai' },
     { value: 'gpt-5-2025-08-07', label: 'GPT-5', provider: 'openai' },
     { value: 'gpt-5-pro-2025-10-06', label: 'GPT-5 Pro', provider: 'openai' },
     { value: 'gpt-5.2', label: 'GPT-5.2', provider: 'openai' },
@@ -141,9 +154,19 @@ export default function Home() {
     return models.find(m => m.value === selectedModel)?.provider || 'openai'
   }
 
+  const getApiKeyForProvider = (provider: string) => {
+    if (provider === 'anthropic') return anthropicKey
+    if (provider === 'gemini') return geminiKey
+    return openaiKey
+  }
+
+  const selectedModelSupportsServerKey = () => {
+    return SERVER_KEY_MODELS.has(selectedModel)
+  }
+
   const hasApiKey = () => {
-    if (!SHOW_SETTINGS) return true  // Always return true when settings hidden (server handles API key)
-    return openaiKey.length > 0 || anthropicKey.length > 0 || geminiKey.length > 0
+    if (selectedModelSupportsServerKey()) return true
+    return getApiKeyForProvider(getProvider()).length > 0
   }
 
   // Live transliteration for input (only for Georgian/Mingrelian)
@@ -162,18 +185,17 @@ export default function Home() {
   const handleTranslate = async () => {
     const startTime = performance.now()
     const provider = getProvider()
+    const userApiKey = getApiKeyForProvider(provider)
     
-    // Use empty string for api_key when settings hidden or for Gemini (backend will use server-side key)
+    // Use an empty api_key when the user has not provided one; the backend can fall back to server-side credentials.
     const apiKey = SHOW_SETTINGS 
-      ? (provider === 'anthropic' ? anthropicKey : 
-         provider === 'gemini' ? (geminiKey || '') : openaiKey)
+      ? userApiKey
       : ''
 
     console.log('🚀 Starting translation...', { provider, model: selectedModel, sourceLanguage, targetLanguage })
 
-    // Only require API key for OpenAI and Anthropic (Gemini uses server-side key as fallback)
-    if (SHOW_SETTINGS && !apiKey && provider !== 'gemini') {
-      const providerName = provider === 'anthropic' ? 'Anthropic' : 'OpenAI'
+    if (SHOW_SETTINGS && !selectedModelSupportsServerKey() && !userApiKey) {
+      const providerName = provider === 'anthropic' ? 'Anthropic' : provider === 'gemini' ? 'Gemini' : 'OpenAI'
       setError(`${t('noApiKey')} ${providerName} ${t('apiKey')}`)
       return
     }
@@ -317,7 +339,7 @@ export default function Home() {
       setRememberOpenai(false)
       setRememberAnthropic(false)
       setRememberGemini(false)
-      setSelectedModel('gpt-5-2025-08-07')
+      setSelectedModel(DEFAULT_MODEL)
       setSourceLanguage('mingrelian')
       setTargetLanguage('english')
     }
@@ -579,4 +601,3 @@ export default function Home() {
     </>
   )
 }
-
