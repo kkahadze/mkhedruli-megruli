@@ -8,9 +8,9 @@ import { useLanguage } from '@/contexts/LanguageContext'
 
 // Toggle this to show/hide settings UI (API keys will be handled server-side when false)
 const SHOW_SETTINGS = true
-const DEFAULT_MODEL = 'gpt-5.4-nano'
+const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview'
 const SERVER_KEY_MODELS = new Set(['gpt-5.4-nano', 'gemini-3.1-flash-lite-preview'])
-const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gpt_5_4_nano_v1'
+const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gemini_3_1_flash_lite_v1'
 
 export default function Home() {
   const { t } = useLanguage()
