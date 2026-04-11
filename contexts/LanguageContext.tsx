@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { Language, translations, TranslationKey } from '@/utils/translations'
+import { detectSiteDefaults, getDefaultSiteDefaults } from '@/utils/siteDefaults'
 
 interface LanguageContextType {
   language: Language
@@ -12,15 +13,34 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('en')
+  const [language, setLanguageState] = useState<Language>(getDefaultSiteDefaults().uiLanguage)
 
   // Load saved language preference on mount
   useEffect(() => {
+    let cancelled = false
+
     const saved = localStorage.getItem('mingrelian_language')
     if (saved === 'en' || saved === 'ka') {
       setLanguageState(saved)
+      return () => {
+        cancelled = true
+      }
+    }
+
+    void detectSiteDefaults().then((defaults) => {
+      if (!cancelled) {
+        setLanguageState(defaults.uiLanguage)
+      }
+    })
+
+    return () => {
+      cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
 
   // Save language preference when it changes
   const setLanguage = (lang: Language) => {
@@ -47,4 +67,3 @@ export function useLanguage() {
   }
   return context
 }
-

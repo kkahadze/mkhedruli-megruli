@@ -5,18 +5,25 @@ import { mkhedruliToLatinized, latinizedToMkhedruli, isGeorgianScript } from '@/
 import Navbar from '@/components/Navbar'
 import SettingsModal from '@/components/SettingsModal'
 import { useLanguage } from '@/contexts/LanguageContext'
+import {
+  detectSiteDefaults,
+  getDefaultSiteDefaults,
+  isTranslationLanguage,
+  type TranslationLanguage,
+} from '@/utils/siteDefaults'
 
 // Toggle this to show/hide settings UI (API keys will be handled server-side when false)
 const SHOW_SETTINGS = true
 const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview'
 const SERVER_KEY_MODELS = new Set(['gpt-5.4-nano', 'gemini-3.1-flash-lite-preview'])
 const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gemini_3_1_flash_lite_v1'
+const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
 
 export default function Home() {
-  const { t } = useLanguage()
+  const { language, setLanguage, t } = useLanguage()
   const [inputText, setInputText] = useState('')
-  const [sourceLanguage, setSourceLanguage] = useState<'mingrelian' | 'georgian' | 'english'>('mingrelian')
-  const [targetLanguage, setTargetLanguage] = useState<'mingrelian' | 'georgian' | 'english'>('english')
+  const [sourceLanguage, setSourceLanguage] = useState<TranslationLanguage>(DEFAULT_SITE_DEFAULTS.sourceLanguage)
+  const [targetLanguage, setTargetLanguage] = useState<TranslationLanguage>(DEFAULT_SITE_DEFAULTS.targetLanguage)
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL)
   const [openaiKey, setOpenaiKey] = useState('')
   const [anthropicKey, setAnthropicKey] = useState('')
@@ -28,6 +35,7 @@ export default function Home() {
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [preferencesReady, setPreferencesReady] = useState(false)
   const [result, setResult] = useState<{
     mingrelian_latinized: string
     mingrelian_mkhedruli: string
@@ -38,14 +46,14 @@ export default function Home() {
   const languageOptions = useMemo(
     () =>
       [
-        { value: 'mingrelian' as const, label: t('mingrelian') },
-        { value: 'georgian' as const, label: t('georgian') },
-        { value: 'english' as const, label: t('english') },
+        { value: 'mingrelian' as TranslationLanguage, label: t('mingrelian') },
+        { value: 'georgian' as TranslationLanguage, label: t('georgian') },
+        { value: 'english' as TranslationLanguage, label: t('english') },
       ],
     [t]
   )
 
-  const setSourceLanguageSafe = (next: 'mingrelian' | 'georgian' | 'english') => {
+  const setSourceLanguageSafe = (next: TranslationLanguage) => {
     if (next === targetLanguage) {
       // Pick the first different language as the new target to avoid source==target
       const fallback = (['mingrelian', 'georgian', 'english'] as const).find(l => l !== next)
@@ -54,7 +62,7 @@ export default function Home() {
     setSourceLanguage(next)
   }
 
-  const setTargetLanguageSafe = (next: 'mingrelian' | 'georgian' | 'english') => {
+  const setTargetLanguageSafe = (next: TranslationLanguage) => {
     if (next === sourceLanguage) {
       const fallback = (['mingrelian', 'georgian', 'english'] as const).find(l => l !== next)
       if (fallback) setSourceLanguage(fallback)
@@ -64,79 +72,116 @@ export default function Home() {
 
   // Load saved preferences
   useEffect(() => {
-    const savedOpenaiKey = localStorage.getItem('mingrelian_openai_key')
-    const savedAnthropicKey = localStorage.getItem('mingrelian_anthropic_key')
-    const savedGeminiKey = localStorage.getItem('mingrelian_gemini_key')
-    const savedModel = localStorage.getItem('mingrelian_model')
-    const modelMigrationApplied = localStorage.getItem(MODEL_MIGRATION_KEY) === 'true'
-    const savedSourceLang = localStorage.getItem('mingrelian_source_lang')
-    const savedTargetLang = localStorage.getItem('mingrelian_target_lang')
-    const rememberOpenai = localStorage.getItem('mingrelian_remember_openai_key') === 'true'
-    const rememberAnthropic = localStorage.getItem('mingrelian_remember_anthropic_key') === 'true'
-    const rememberGemini = localStorage.getItem('mingrelian_remember_gemini_key') === 'true'
+    let cancelled = false
 
-    if (savedOpenaiKey && rememberOpenai) {
-      setOpenaiKey(savedOpenaiKey)
-      setRememberOpenai(true)
+    const loadPreferences = async () => {
+      const savedOpenaiKey = localStorage.getItem('mingrelian_openai_key')
+      const savedAnthropicKey = localStorage.getItem('mingrelian_anthropic_key')
+      const savedGeminiKey = localStorage.getItem('mingrelian_gemini_key')
+      const savedModel = localStorage.getItem('mingrelian_model')
+      const modelMigrationApplied = localStorage.getItem(MODEL_MIGRATION_KEY) === 'true'
+      const savedSourceLang = localStorage.getItem('mingrelian_source_lang')
+      const savedTargetLang = localStorage.getItem('mingrelian_target_lang')
+      const rememberOpenai = localStorage.getItem('mingrelian_remember_openai_key') === 'true'
+      const rememberAnthropic = localStorage.getItem('mingrelian_remember_anthropic_key') === 'true'
+      const rememberGemini = localStorage.getItem('mingrelian_remember_gemini_key') === 'true'
+
+      if (savedOpenaiKey && rememberOpenai) {
+        setOpenaiKey(savedOpenaiKey)
+        setRememberOpenai(true)
+      }
+      if (savedAnthropicKey && rememberAnthropic) {
+        setAnthropicKey(savedAnthropicKey)
+        setRememberAnthropic(true)
+      }
+      if (savedGeminiKey && rememberGemini) {
+        setGeminiKey(savedGeminiKey)
+        setRememberGemini(true)
+      }
+      if (!modelMigrationApplied) {
+        setSelectedModel(DEFAULT_MODEL)
+        localStorage.setItem('mingrelian_model', DEFAULT_MODEL)
+        localStorage.setItem(MODEL_MIGRATION_KEY, 'true')
+      } else if (savedModel) {
+        setSelectedModel(savedModel)
+      }
+
+      let nextSourceLanguage = DEFAULT_SITE_DEFAULTS.sourceLanguage
+      let nextTargetLanguage = DEFAULT_SITE_DEFAULTS.targetLanguage
+
+      if (
+        isTranslationLanguage(savedSourceLang) &&
+        isTranslationLanguage(savedTargetLang) &&
+        savedSourceLang !== savedTargetLang
+      ) {
+        nextSourceLanguage = savedSourceLang
+        nextTargetLanguage = savedTargetLang
+      } else {
+        const geoDefaults = await detectSiteDefaults()
+        if (cancelled) return
+        nextSourceLanguage = geoDefaults.sourceLanguage
+        nextTargetLanguage = geoDefaults.targetLanguage
+      }
+
+      if (cancelled) return
+
+      setSourceLanguage(nextSourceLanguage)
+      setTargetLanguage(nextTargetLanguage)
+      setPreferencesReady(true)
     }
-    if (savedAnthropicKey && rememberAnthropic) {
-      setAnthropicKey(savedAnthropicKey)
-      setRememberAnthropic(true)
+
+    void loadPreferences()
+
+    return () => {
+      cancelled = true
     }
-    if (savedGeminiKey && rememberGemini) {
-      setGeminiKey(savedGeminiKey)
-      setRememberGemini(true)
-    }
-    if (!modelMigrationApplied) {
-      setSelectedModel(DEFAULT_MODEL)
-      localStorage.setItem('mingrelian_model', DEFAULT_MODEL)
-      localStorage.setItem(MODEL_MIGRATION_KEY, 'true')
-    } else if (savedModel) {
-      setSelectedModel(savedModel)
-    }
-    if (savedSourceLang) setSourceLanguage(savedSourceLang as 'mingrelian' | 'georgian' | 'english')
-    if (savedTargetLang) setTargetLanguage(savedTargetLang as 'mingrelian' | 'georgian' | 'english')
   }, [])
 
   // Save preferences when they change
   useEffect(() => {
+    if (!preferencesReady) return
     localStorage.setItem('mingrelian_model', selectedModel)
-  }, [selectedModel])
+  }, [preferencesReady, selectedModel])
 
   useEffect(() => {
+    if (!preferencesReady) return
     localStorage.setItem('mingrelian_source_lang', sourceLanguage)
-  }, [sourceLanguage])
+  }, [preferencesReady, sourceLanguage])
 
   useEffect(() => {
+    if (!preferencesReady) return
     localStorage.setItem('mingrelian_target_lang', targetLanguage)
-  }, [targetLanguage])
+  }, [preferencesReady, targetLanguage])
 
   useEffect(() => {
+    if (!preferencesReady) return
     localStorage.setItem('mingrelian_remember_openai_key', rememberOpenai.toString())
     if (rememberOpenai && openaiKey) {
       localStorage.setItem('mingrelian_openai_key', openaiKey)
     } else {
       localStorage.removeItem('mingrelian_openai_key')
     }
-  }, [rememberOpenai, openaiKey])
+  }, [preferencesReady, rememberOpenai, openaiKey])
 
   useEffect(() => {
+    if (!preferencesReady) return
     localStorage.setItem('mingrelian_remember_anthropic_key', rememberAnthropic.toString())
     if (rememberAnthropic && anthropicKey) {
       localStorage.setItem('mingrelian_anthropic_key', anthropicKey)
     } else {
       localStorage.removeItem('mingrelian_anthropic_key')
     }
-  }, [rememberAnthropic, anthropicKey])
+  }, [preferencesReady, rememberAnthropic, anthropicKey])
 
   useEffect(() => {
+    if (!preferencesReady) return
     localStorage.setItem('mingrelian_remember_gemini_key', rememberGemini.toString())
     if (rememberGemini && geminiKey) {
       localStorage.setItem('mingrelian_gemini_key', geminiKey)
     } else {
       localStorage.removeItem('mingrelian_gemini_key')
     }
-  }, [rememberGemini, geminiKey])
+  }, [preferencesReady, rememberGemini, geminiKey])
 
   const models = [
     { value: 'gpt-5.4-nano', label: 'GPT-5.4 Nano', provider: 'openai' },
@@ -201,17 +246,21 @@ export default function Home() {
     }
 
     if (!inputText.trim()) {
-      setError(t('enterMingrelian'))
+      setError(t('enterSourceText'))
       return
     }
 
     if (inputText.length > 100) {
-      setError(`Text is too long (${inputText.length} characters). Please limit your input to 100 characters for better translation quality.`)
+      setError(
+        language === 'ka'
+          ? `ტექსტი ძალიან გრძელია (${inputText.length} ${t('characters')}). გთხოვთ შეზღუდოთ შეყვანა 100 სიმბოლომდე უკეთესი თარგმანის ხარისხისთვის.`
+          : `Text is too long (${inputText.length} ${t('characters')}). Please limit your input to 100 characters for better translation quality.`
+      )
       return
     }
 
     if (sourceLanguage === targetLanguage) {
-      setError('Source and target languages must be different')
+      setError(t('sourceAndTargetMustDiffer'))
       return
     }
 
@@ -330,19 +379,24 @@ export default function Home() {
     }
   }
 
-  const clearSettings = () => {
-    if (confirm('Clear all saved settings?')) {
-      localStorage.clear()
-      setOpenaiKey('')
-      setAnthropicKey('')
-      setGeminiKey('')
-      setRememberOpenai(false)
-      setRememberAnthropic(false)
-      setRememberGemini(false)
-      setSelectedModel(DEFAULT_MODEL)
-      setSourceLanguage('mingrelian')
-      setTargetLanguage('english')
-    }
+  const clearSettings = async () => {
+    localStorage.clear()
+
+    const defaults = await detectSiteDefaults()
+
+    setOpenaiKey('')
+    setAnthropicKey('')
+    setGeminiKey('')
+    setRememberOpenai(false)
+    setRememberAnthropic(false)
+    setRememberGemini(false)
+    setSelectedModel(DEFAULT_MODEL)
+    setInputText('')
+    setError('')
+    setResult(null)
+    setSourceLanguage(defaults.sourceLanguage)
+    setTargetLanguage(defaults.targetLanguage)
+    setLanguage(defaults.uiLanguage)
   }
 
   return (
@@ -379,9 +433,9 @@ export default function Home() {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* SEO intro (visible, non-spammy) */}
         <div className="mb-4 text-sm text-gray-600">
-          <span className="font-medium text-gray-900">Mingrelian Translator</span>
+          <span className="font-medium text-gray-900">{t('introTitle')}</span>
           {' — '}
-          Translate Mingrelian (Megrelian / Megruli), Georgian, and English.
+          {t('introDescription')}
         </div>
 
         {/* Language Selector Bar */}
@@ -434,7 +488,7 @@ export default function Home() {
               }
             }}
             className="self-center shrink-0 rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
-            title="Swap languages"
+            title={t('swapLanguages')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -485,7 +539,7 @@ export default function Home() {
             {/* Character counter */}
             <div className="mt-2 text-right">
               <span className={`text-xs ${inputText.length > 100 ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
-                {inputText.length}/100 characters
+                {inputText.length}/100 {t('characters')}
               </span>
             </div>
           </div>

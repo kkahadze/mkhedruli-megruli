@@ -5,6 +5,8 @@ export const translations = {
     // Navbar
     settings: 'Settings',
     appTitle: 'Mingrelian Translator',
+    switchToGeorgian: 'Switch to Georgian',
+    switchToEnglish: 'Switch to English',
     
     // Main page - Input section
     mingrelianText: 'Mingrelian Text',
@@ -57,7 +59,8 @@ export const translations = {
     // Errors
     noApiKey: 'Please enter your',
     apiKey: 'API key',
-    enterMingrelian: 'Please enter Mingrelian text to translate',
+    enterSourceText: 'Please enter text to translate',
+    sourceAndTargetMustDiffer: 'Source and target languages must be different',
     timeout: 'Request timed out after 4 minutes. The AI model may be taking too long. Try a shorter text or different model.',
     networkError: 'Network error',
     apiError: 'API error',
@@ -66,11 +69,19 @@ export const translations = {
     // Contact
     contactTitle: 'Questions or Feedback',
     contactMessage: 'For questions or feedback about the Mingrelian Translator, please contact:',
+
+    // Home page
+    introTitle: 'Mingrelian Translator',
+    introDescription: 'Translate Mingrelian (Megrelian / Megruli), Georgian, and English.',
+    swapLanguages: 'Swap languages',
+    characters: 'characters',
   },
   ka: {
     // Navbar
     settings: 'პარამეტრები',
     appTitle: 'მეგრული მთარგმნელი',
+    switchToGeorgian: 'გადართვა ქართულზე',
+    switchToEnglish: 'გადართვა ინგლისურზე',
     
     // Main page - Input section
     mingrelianText: 'მეგრული ტექსტი',
@@ -123,7 +134,8 @@ export const translations = {
     // Errors
     noApiKey: 'გთხოვთ შეიყვანოთ თქვენი',
     apiKey: 'API გასაღები',
-    enterMingrelian: 'გთხოვთ შეიყვანოთ მეგრული ტექსტი თარგმნისთვის',
+    enterSourceText: 'გთხოვთ შეიყვანოთ ტექსტი თარგმნისთვის',
+    sourceAndTargetMustDiffer: 'საწყისი და სამიზნე ენები განსხვავებული უნდა იყოს',
     timeout: 'მოთხოვნის დრო ამოიწურა 4 წუთის შემდეგ. AI მოდელს შეიძლება დიდი დრო სჭირდება. სცადეთ უფრო მოკლე ტექსტი ან სხვა მოდელი.',
     networkError: 'ქსელის შეცდომა',
     apiError: 'API შეცდომა',
@@ -132,8 +144,13 @@ export const translations = {
     // Contact
     contactTitle: 'კითხვები ან გამოხმაურება',
     contactMessage: 'კითხვების ან გამოხმაურების შემთხვევაში მეგრული მთარგმნელის შესახებ, გთხოვთ დაუკავშირდეთ:',
+
+    // Home page
+    introTitle: 'მეგრული მთარგმნელი',
+    introDescription: 'თარგმნეთ მეგრული, ქართული და ინგლისური.',
+    swapLanguages: 'ენების გაცვლა',
+    characters: 'სიმბოლო',
   },
 }
 
 export type TranslationKey = keyof typeof translations.en
-

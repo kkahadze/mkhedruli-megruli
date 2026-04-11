@@ -20,7 +20,7 @@ interface SettingsModalProps {
   selectedModel: string
   setSelectedModel: (model: string) => void
   models: Array<{ value: string; label: string; provider: string }>
-  onClearSettings: () => void
+  onClearSettings: () => void | Promise<void>
 }
 
 export default function SettingsModal({
@@ -227,4 +227,3 @@ export default function SettingsModal({
     </>
   )
 }
-
