@@ -36,6 +36,14 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+To point the frontend at a local backend, create `.env.local` with:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+If `.env.local` is absent, the app falls back to the hosted API.
+
 ### Building for Production
 
 ```bash
@@ -77,8 +85,13 @@ mkhedruli-megruli/
 
 ## Backend API
 
-The application connects to the Argo translator API hosted at:
+The application reads the backend base URL from `NEXT_PUBLIC_API_URL`.
+
+Default:
 `https://argo-translator.onrender.com/chat`
+
+Local development example:
+`http://localhost:8000/chat`
 
 If the backend is configured with provider API keys in its environment, end users do not need to supply their own keys for the default experience.
 

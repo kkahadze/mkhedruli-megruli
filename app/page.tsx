@@ -18,6 +18,8 @@ const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview'
 const SERVER_KEY_MODELS = new Set(['gpt-5.4-nano', 'gemini-3.1-flash-lite-preview'])
 const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gemini_3_1_flash_lite_v1'
 const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
+const DEFAULT_API_URL = 'https://argo-translator.onrender.com'
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/+$/, '')
 
 export default function Home() {
   const { language, setLanguage, t } = useLanguage()
@@ -288,10 +290,7 @@ export default function Home() {
         console.error('Request timed out after 1 minute')
       }, 60000) // 1 minute timeout
 
-      // Switch between local and production
-      const apiUrl = 'https://argo-translator.onrender.com'
-      
-      const response = await fetch(`${apiUrl}/chat`, {
+      const response = await fetch(`${API_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
