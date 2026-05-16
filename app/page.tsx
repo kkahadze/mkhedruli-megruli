@@ -21,6 +21,16 @@ const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
 const DEFAULT_API_URL = 'https://argo-translator.onrender.com'
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/+$/, '')
 
+type TranslationError =
+  | { type: 'missingApiKey'; providerName: string }
+  | { type: 'emptyInput' }
+  | { type: 'tooLong'; count: number }
+  | { type: 'sameLanguage' }
+  | { type: 'apiError'; message: string }
+  | { type: 'noResult' }
+  | { type: 'timeout' }
+  | { type: 'networkError'; message: string }
+
 export default function Home() {
   const { language, setLanguage, t } = useLanguage()
   const [inputText, setInputText] = useState('')
@@ -36,7 +46,7 @@ export default function Home() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<TranslationError | null>(null)
   const [preferencesReady, setPreferencesReady] = useState(false)
   const [result, setResult] = useState<{
     mingrelian_latinized: string
@@ -229,6 +239,36 @@ export default function Home() {
     }
   }, [inputText, sourceLanguage])
 
+  const errorMessage = useMemo(() => {
+    if (!error) return ''
+
+    switch (error.type) {
+      case 'missingApiKey':
+        return `${t('noApiKey')} ${error.providerName} ${t('apiKey')}`
+      case 'emptyInput':
+        return t('enterSourceText')
+      case 'tooLong':
+        return language === 'ka'
+          ? `ტექსტი ძალიან გრძელია (${error.count} ${t('characters')}). გთხოვთ შეზღუდოთ შეყვანა 100 სიმბოლომდე უკეთესი თარგმანის ხარისხისთვის.`
+          : `Text is too long (${error.count} ${t('characters')}). Please limit your input to 100 characters for better translation quality.`
+      case 'sameLanguage':
+        return t('sourceAndTargetMustDiffer')
+      case 'apiError':
+        return `${t('apiError')}: ${error.message}`
+      case 'noResult':
+        return t('noResult')
+      case 'timeout':
+        return t('timeout')
+      case 'networkError':
+        return `${t('networkError')}: ${error.message}`
+    }
+  }, [error, language, t])
+
+  const showError = (nextError: TranslationError) => {
+    setResult(null)
+    setError(nextError)
+  }
+
   const handleTranslate = async () => {
     const startTime = performance.now()
     const provider = getProvider()
@@ -243,30 +283,26 @@ export default function Home() {
 
     if (SHOW_SETTINGS && !selectedModelSupportsServerKey() && !userApiKey) {
       const providerName = provider === 'anthropic' ? 'Anthropic' : provider === 'gemini' ? 'Gemini' : 'OpenAI'
-      setError(`${t('noApiKey')} ${providerName} ${t('apiKey')}`)
+      showError({ type: 'missingApiKey', providerName })
       return
     }
 
     if (!inputText.trim()) {
-      setError(t('enterSourceText'))
+      showError({ type: 'emptyInput' })
       return
     }
 
     if (inputText.length > 100) {
-      setError(
-        language === 'ka'
-          ? `ტექსტი ძალიან გრძელია (${inputText.length} ${t('characters')}). გთხოვთ შეზღუდოთ შეყვანა 100 სიმბოლომდე უკეთესი თარგმანის ხარისხისთვის.`
-          : `Text is too long (${inputText.length} ${t('characters')}). Please limit your input to 100 characters for better translation quality.`
-      )
+      showError({ type: 'tooLong', count: inputText.length })
       return
     }
 
     if (sourceLanguage === targetLanguage) {
-      setError(t('sourceAndTargetMustDiffer'))
+      showError({ type: 'sameLanguage' })
       return
     }
 
-    setError('')
+    setError(null)
     setLoading(true)
 
     const requestBody = {
@@ -303,7 +339,7 @@ export default function Home() {
       if (!response.ok) {
         const errorData = await response.json()
         console.error('API error:', errorData)
-        setError(`${t('apiError')}: ${errorData.detail || response.statusText}`)
+        showError({ type: 'apiError', message: errorData.detail || response.statusText })
         setLoading(false)
         return
       }
@@ -313,7 +349,7 @@ export default function Home() {
       const decoder = new TextDecoder()
       
       if (!reader) {
-        setError(t('noResult'))
+        showError({ type: 'noResult' })
         setLoading(false)
         return
       }
@@ -344,7 +380,7 @@ export default function Home() {
                 finalResult = event.result
               } else if (event.error) {
                 console.error('API error:', event.error)
-                setError(`${t('apiError')}: ${event.error}`)
+                showError({ type: 'apiError', message: event.error })
                 setLoading(false)
                 return
               }
@@ -362,16 +398,16 @@ export default function Home() {
         console.log(`⏱️  Total time: ${duration} seconds (${Math.round(endTime - startTime)}ms)`)
         setResult(finalResult)
       } else {
-        setError(t('noResult'))
+        showError({ type: 'noResult' })
       }
     } catch (err: any) {
       const endTime = performance.now()
       const duration = ((endTime - startTime) / 1000).toFixed(2)
       console.error(`❌ Translation failed after ${duration}s:`, err)
       if (err.name === 'AbortError') {
-        setError(t('timeout'))
+        showError({ type: 'timeout' })
       } else {
-        setError(`${t('networkError')}: ${err.message}`)
+        showError({ type: 'networkError', message: err.message })
       }
     } finally {
       setLoading(false)
@@ -391,7 +427,7 @@ export default function Home() {
     setRememberGemini(false)
     setSelectedModel(DEFAULT_MODEL)
     setInputText('')
-    setError('')
+    setError(null)
     setResult(null)
     setSourceLanguage(defaults.sourceLanguage)
     setTargetLanguage(defaults.targetLanguage)
@@ -563,9 +599,9 @@ export default function Home() {
             </div>
           )}
 
-          {error && (
+          {errorMessage && (
             <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 border border-red-200">
-              {error}
+              {errorMessage}
             </div>
           )}
         </div>
