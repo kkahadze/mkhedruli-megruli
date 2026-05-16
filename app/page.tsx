@@ -17,7 +17,32 @@ const SHOW_SETTINGS = true
 const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview'
 const SERVER_KEY_MODELS = new Set(['gpt-5.4-nano', 'gemini-3.1-flash-lite-preview'])
 const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gemini_3_1_flash_lite_v1'
+const VISITOR_ID_STORAGE_KEY = 'mingrelian_visitor_id'
+const VISITOR_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
 const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
+
+const createAnonymousVisitorId = () => {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID()
+  }
+
+  return `visitor_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`
+}
+
+const getAnonymousVisitorId = () => {
+  try {
+    const savedVisitorId = localStorage.getItem(VISITOR_ID_STORAGE_KEY)
+    if (savedVisitorId && VISITOR_ID_PATTERN.test(savedVisitorId)) {
+      return savedVisitorId
+    }
+
+    const nextVisitorId = createAnonymousVisitorId()
+    localStorage.setItem(VISITOR_ID_STORAGE_KEY, nextVisitorId)
+    return nextVisitorId
+  } catch {
+    return createAnonymousVisitorId()
+  }
+}
 
 export default function Home() {
   const { language, setLanguage, t } = useLanguage()
@@ -273,10 +298,11 @@ export default function Home() {
       source_language: sourceLanguage,
       target_language: targetLanguage,
       model: selectedModel,
-      provider: provider
+      provider: provider,
+      visitor_id: getAnonymousVisitorId()
     }
 
-    console.log('Request body:', { ...requestBody, api_key: '***' })
+    console.log('Request body:', { ...requestBody, api_key: '***', visitor_id: '***' })
 
     try {
       console.log('Sending request to API...')

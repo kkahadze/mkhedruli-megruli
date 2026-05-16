@@ -82,6 +82,8 @@ The application connects to the Argo translator API hosted at:
 
 If the backend is configured with provider API keys in its environment, end users do not need to supply their own keys for the default experience.
 
+The client also generates an anonymous `visitor_id` in `localStorage` and sends it with translation requests so backend analytics can group repeat visits without collecting account details.
+
 ## License
 
 MIT
