@@ -65,6 +65,10 @@ export default function Home() {
       ],
     [t]
   )
+  const selectorGridClass = language === 'en' ? 'grid-cols-[48px_1fr]' : 'grid-cols-[64px_1fr]'
+  const selectorDividerClass = language === 'en' ? 'pl-[48px]' : 'pl-[64px]'
+  const selectorLabelClass = language === 'en' ? 'text-[1.05rem]' : 'text-[0.95rem]'
+  const selectorButtonTextClass = language === 'en' ? 'text-[0.9rem]' : 'text-[0.7rem]'
 
   const setSourceLanguageSafe = (next: TranslationLanguage) => {
     if (next === targetLanguage) {
@@ -275,6 +279,22 @@ export default function Home() {
     setError(nextError)
   }
 
+  const resultText = useMemo(() => {
+    if (!result) return ''
+    if (targetLanguage === 'mingrelian') {
+      return result.mingrelian_mkhedruli || (result.mingrelian_latinized && latinizedToMkhedruli(result.mingrelian_latinized)) || ''
+    }
+    if (targetLanguage === 'georgian') return result.georgian
+    return result.english
+  }, [result, targetLanguage])
+
+  const resultTransliteration = useMemo(() => {
+    if (!result) return ''
+    if (targetLanguage === 'mingrelian') return result.mingrelian_latinized
+    if (targetLanguage === 'georgian' && result.georgian) return mkhedruliToLatinized(result.georgian)
+    return ''
+  }, [result, targetLanguage])
+
   const handleTranslate = async () => {
     const startTime = performance.now()
     const provider = getProvider()
@@ -473,29 +493,32 @@ export default function Home() {
         />
       )}
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-3xl px-4 py-7 sm:px-6 sm:py-10">
         {/* SEO intro (visible, non-spammy) */}
-        <div className="mb-4 text-sm text-gray-600">
-          <span className="font-medium text-gray-900">{t('introTitle')}</span>
+        <div className="mb-6 text-[1.02rem] leading-7 text-gray-600 sm:text-lg">
+          <span className="font-bold text-gray-950">{t('introTitle')}</span>
           {' — '}
           {t('introDescription')}
         </div>
 
         {/* Language Selector Bar */}
-        <div className="mb-6 flex flex-col items-stretch justify-center gap-3 rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-3 shadow-md sm:flex-row sm:items-center">
-          {/* Source language tabs */}
-          <div className="w-full sm:flex-1">
-            <div className="flex flex-wrap items-center justify-center gap-3 px-1 sm:justify-start">
+        <div className="mb-7 rounded-xl border border-gray-200 bg-white px-3 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:px-6">
+          <div className={['grid items-center gap-2 sm:grid-cols-[76px_1fr] sm:gap-4', selectorGridClass].join(' ')}>
+            <div className={['font-semibold leading-tight text-gray-950 sm:text-lg', selectorLabelClass].join(' ')}>
+              {t('fromLanguage')}
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {languageOptions.map((opt) => (
                 <button
                   key={`src-${opt.value}`}
                   type="button"
                   onClick={() => setSourceLanguageSafe(opt.value)}
                   className={[
-                    'whitespace-nowrap pb-1 text-sm font-semibold transition-colors',
+                    'h-12 min-w-0 overflow-hidden rounded-xl border px-1 font-semibold leading-tight transition-colors sm:h-[52px] sm:px-2 sm:text-base',
+                    selectorButtonTextClass,
                     sourceLanguage === opt.value
-                      ? 'text-blue-700 border-b-2 border-blue-600'
-                      : 'text-gray-700 hover:text-gray-900 border-b-2 border-transparent',
+                      ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-[0_0_0_1px_rgba(37,99,235,0.08)]'
+                      : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-gray-50',
                   ].join(' ')}
                 >
                   {opt.label}
@@ -504,53 +527,60 @@ export default function Home() {
             </div>
           </div>
 
-          <button
-            onClick={() => {
-              // Swap languages
-              const tempLang = sourceLanguage
-              setSourceLanguage(targetLanguage)
-              setTargetLanguage(tempLang)
-              
-              // Swap text content if there's a result
-              if (result) {
-                let outputText = ''
+          <div className={['my-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:my-5 sm:pl-[76px]', selectorDividerClass].join(' ')}>
+            <div className="h-px bg-gray-200" />
+            <button
+              onClick={() => {
+                // Swap languages
+                const tempLang = sourceLanguage
+                setSourceLanguage(targetLanguage)
+                setTargetLanguage(tempLang)
                 
-                // Get the output text based on current target language
-                if (targetLanguage === 'mingrelian') {
-                  outputText = result.mingrelian_mkhedruli || result.mingrelian_latinized
-                } else if (targetLanguage === 'georgian') {
-                  outputText = result.georgian
-                } else if (targetLanguage === 'english') {
-                  outputText = result.english
+                // Swap text content if there's a result
+                if (result) {
+                  let outputText = ''
+                  
+                  // Get the output text based on current target language
+                  if (targetLanguage === 'mingrelian') {
+                    outputText = result.mingrelian_mkhedruli || result.mingrelian_latinized
+                  } else if (targetLanguage === 'georgian') {
+                    outputText = result.georgian
+                  } else if (targetLanguage === 'english') {
+                    outputText = result.english
+                  }
+                  
+                  // Swap: output becomes new input
+                  setInputText(outputText)
+                  // Clear result so user can translate again
+                  setResult(null)
                 }
-                
-                // Swap: output becomes new input
-                setInputText(outputText)
-                // Clear result so user can translate again
-                setResult(null)
-              }
-            }}
-            className="self-center shrink-0 rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
-            title={t('swapLanguages')}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-          </button>
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-gray-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              title={t('swapLanguages')}
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7l4-4m0 0l4 4m-4-4v18m4-4l-4 4m0 0l-4-4" />
+              </svg>
+            </button>
+            <div className="h-px bg-gray-200" />
+          </div>
 
-          {/* Target language tabs */}
-          <div className="w-full sm:flex-1">
-            <div className="flex flex-wrap items-center justify-center gap-3 px-1 sm:justify-end">
+          <div className={['grid items-center gap-2 sm:grid-cols-[76px_1fr] sm:gap-4', selectorGridClass].join(' ')}>
+            <div className={['font-semibold leading-tight text-gray-950 sm:text-lg', selectorLabelClass].join(' ')}>
+              {t('toLanguage')}
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {languageOptions.map((opt) => (
                 <button
                   key={`tgt-${opt.value}`}
                   type="button"
                   onClick={() => setTargetLanguageSafe(opt.value)}
                   className={[
-                    'whitespace-nowrap pb-1 text-sm font-semibold transition-colors',
+                    'h-12 min-w-0 overflow-hidden rounded-xl border px-1 font-semibold leading-tight transition-colors sm:h-[52px] sm:px-2 sm:text-base',
+                    selectorButtonTextClass,
                     targetLanguage === opt.value
-                      ? 'text-blue-700 border-b-2 border-blue-600'
-                      : 'text-gray-700 hover:text-gray-900 border-b-2 border-transparent',
+                      ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-[0_0_0_1px_rgba(37,99,235,0.08)]'
+                      : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-gray-50',
                   ].join(' ')}
                 >
                   {opt.label}
@@ -561,27 +591,25 @@ export default function Home() {
         </div>
 
         {/* Main Translation Interface */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="space-y-5 sm:space-y-7">
         {/* Input Section */}
-        <div className="space-y-4">
+        <div className="space-y-5">
 
-          <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
-            <div className="relative">
+          <div className="relative min-h-[300px] rounded-xl border border-gray-300 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:min-h-[420px]">
               <textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder={t('sourceTextPlaceholder')}
-                className="w-full h-40 md:h-64 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                className="h-full min-h-[300px] w-full resize-none rounded-xl bg-transparent px-4 py-5 text-lg leading-relaxed text-gray-950 placeholder:text-gray-500 focus:outline-none sm:min-h-[420px] sm:px-6"
               />
               {inputTransliteration && (
-                <div className="absolute bottom-2 left-2 right-2 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic pointer-events-none border border-gray-200/50">
+                <div className="pointer-events-none absolute bottom-12 left-4 right-4 rounded-md border border-gray-200 bg-gray-50/95 px-3 py-2 text-xs italic text-gray-500 sm:left-6 sm:right-6">
                   {inputTransliteration}
                 </div>
               )}
-            </div>
             {/* Character counter */}
-            <div className="mt-2 text-right">
-              <span className={`text-xs ${inputText.length > 100 ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+            <div className="absolute bottom-4 right-4 sm:right-6">
+              <span className={`text-sm ${inputText.length > 100 ? 'font-semibold text-red-600' : 'text-gray-500'}`}>
                 {inputText.length}/100 {t('characters')}
               </span>
             </div>
@@ -590,12 +618,12 @@ export default function Home() {
           {!loading ? (
             <button
               onClick={handleTranslate}
-              className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
+              className="h-14 w-full rounded-lg bg-blue-700 px-4 text-lg font-bold text-white shadow-[0_1px_2px_rgba(37,99,235,0.18)] transition-colors hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
             >
               {t('translate')}
             </button>
           ) : (
-            <div className="flex items-center justify-center gap-3 py-4 rounded-md bg-gray-50 border border-gray-200">
+            <div className="flex h-14 items-center justify-center gap-3 rounded-lg border border-gray-200 bg-gray-50">
               <div className="flex gap-1">
                 <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                 <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -608,67 +636,31 @@ export default function Home() {
           )}
 
           {errorMessage && (
-            <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 border border-red-200">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
               {errorMessage}
             </div>
           )}
         </div>
 
         {/* Output Section */}
-        <div>
-          {result && (
+        <div className="min-h-[230px] rounded-xl border border-gray-300 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:min-h-[300px] sm:p-6">
+          {result ? (
             <div className="space-y-4">
-              {/* Show result based on target language */}
-              {targetLanguage === 'mingrelian' && (
-                <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                    {t('mingrelian')}
-                  </div>
-                  <div className="relative">
-                    <div className="text-lg text-gray-900 leading-relaxed min-h-[120px] pb-8">
-                      {result.mingrelian_mkhedruli || (result.mingrelian_latinized && latinizedToMkhedruli(result.mingrelian_latinized))}
-                    </div>
-                    {result.mingrelian_latinized && (
-                      <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic border border-gray-200/50">
-                        {result.mingrelian_latinized}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {targetLanguage === 'georgian' && (
-                <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                    {t('georgian')}
-                  </div>
-                  <div className="relative">
-                    <div className="text-lg text-gray-900 leading-relaxed min-h-[120px] pb-8">
-                      {result.georgian}
-                    </div>
-                    {result.georgian && (
-                      <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic border border-gray-200/50">
-                        {mkhedruliToLatinized(result.georgian)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {targetLanguage === 'english' && (
-                <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-                    {t('english')}
-                  </div>
-                  <div className="text-lg text-gray-900 leading-relaxed">{result.english}</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {t(targetLanguage)}
+              </div>
+              <div className="text-xl leading-relaxed text-gray-950">
+                {resultText}
+              </div>
+              {resultTransliteration && (
+                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm italic text-gray-500">
+                  {resultTransliteration}
                 </div>
               )}
             </div>
-          )}
-
-          {!result && !loading && (
-            <div className="h-64 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
-              <p className="text-sm text-gray-500">{t('translationWillAppear')}</p>
+          ) : (
+            <div className="flex min-h-[190px] items-center justify-center sm:min-h-[250px]">
+              <p className="text-base text-gray-500">{t('translationWillAppear')}</p>
             </div>
           )}
         </div>

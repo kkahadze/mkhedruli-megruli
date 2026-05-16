@@ -17,18 +17,23 @@ export default function Navbar({ onSettingsClick, hasApiKey, showSettings = true
   }
 
   return (
-    <nav className="border-b border-gray-200/50 bg-white/80 backdrop-blur-sm shadow-sm">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-3">
+    <nav className="border-b border-gray-200 bg-white">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        <div className="flex h-[68px] items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
             <Image
               src="/mkhedruli-logo.png"
               alt="Mkhedruli Logo"
-              width={40}
-              height={40}
-              className="rounded"
+              width={34}
+              height={34}
+              className="shrink-0 rounded"
             />
-            <h1 className="text-2xl font-bold text-gray-900 cursor-default">
+            <h1
+              className={[
+                'truncate whitespace-nowrap font-extrabold leading-tight text-gray-950 sm:text-4xl',
+                language === 'en' ? 'text-[1.15rem]' : 'text-[1.05rem]',
+              ].join(' ')}
+            >
               {t('appTitle')}
             </h1>
           </div>
@@ -37,29 +42,25 @@ export default function Navbar({ onSettingsClick, hasApiKey, showSettings = true
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-2 rounded-lg border border-gray-200/50 bg-white/80 px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-white hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-800 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:h-12 sm:w-12"
               title={language === 'en' ? t('switchToGeorgian') : t('switchToEnglish')}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
               </svg>
-              <span className="hidden sm:inline font-semibold">
-                {language === 'en' ? 'ქარ' : 'EN'}
-              </span>
             </button>
 
             {/* Settings Button - Only show if settings are enabled */}
             {showSettings && onSettingsClick && (
               <button
                 onClick={onSettingsClick}
-                className="relative flex items-center gap-2 rounded-lg border border-gray-200/50 bg-white/80 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-white hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-800 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:h-12 sm:w-12"
                 title={t('settings')}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span className="hidden sm:inline">{t('settings')}</span>
                 {!hasApiKey && (
                   <span className="absolute -top-1 -right-1 flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

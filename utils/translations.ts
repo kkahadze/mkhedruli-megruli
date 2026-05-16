@@ -73,6 +73,8 @@ export const translations = {
     // Home page
     introTitle: 'Mingrelian Translator',
     introDescription: 'Translate Mingrelian (Megrelian / Megruli), Georgian, and English.',
+    fromLanguage: 'From',
+    toLanguage: 'To',
     swapLanguages: 'Swap languages',
     characters: 'characters',
   },
@@ -148,6 +150,8 @@ export const translations = {
     // Home page
     introTitle: 'მეგრული მთარგმნელი',
     introDescription: 'თარგმნეთ მეგრული, ქართული და ინგლისური.',
+    fromLanguage: 'საწყისი',
+    toLanguage: 'სამიზნე',
     swapLanguages: 'ენების გაცვლა',
     characters: 'სიმბოლო',
   },
