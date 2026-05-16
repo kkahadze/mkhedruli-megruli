@@ -14,9 +14,10 @@ import {
 
 // Toggle this to show/hide settings UI (API keys will be handled server-side when false)
 const SHOW_SETTINGS = true
-const DEFAULT_MODEL = 'gemini-3.1-flash-lite-preview'
-const SERVER_KEY_MODELS = new Set(['gpt-5.4-nano', 'gemini-3.1-flash-lite-preview'])
-const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gemini_3_1_flash_lite_v1'
+const DEFAULT_MODEL = 'gpt-5.5'
+const DEFAULT_REASONING_EFFORT = 'none'
+const SERVER_KEY_MODELS = new Set(['gpt-5.5', 'gpt-5.4-nano', 'gemini-3.1-flash-lite-preview'])
+const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gpt_5_5_reasoning_none_v1'
 const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
 const DEFAULT_API_URL = 'https://argo-translator.onrender.com'
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/+$/, '')
@@ -196,6 +197,7 @@ export default function Home() {
   }, [preferencesReady, rememberGemini, geminiKey])
 
   const models = [
+    { value: 'gpt-5.5', label: 'GPT-5.5 (Reasoning None)', provider: 'openai' },
     { value: 'gpt-5.4-nano', label: 'GPT-5.4 Nano', provider: 'openai' },
     { value: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', provider: 'openai' },
     { value: 'gpt-5.4', label: 'GPT-5.4', provider: 'openai' },
@@ -219,6 +221,10 @@ export default function Home() {
 
   const selectedModelSupportsServerKey = () => {
     return SERVER_KEY_MODELS.has(selectedModel)
+  }
+
+  const getReasoningEffortForModel = (model: string) => {
+    return model === DEFAULT_MODEL ? DEFAULT_REASONING_EFFORT : undefined
   }
 
   const hasApiKey = () => {
@@ -305,13 +311,15 @@ export default function Home() {
     setError(null)
     setLoading(true)
 
+    const reasoningEffort = getReasoningEffortForModel(selectedModel)
     const requestBody = {
       prompt: inputText,
       api_key: apiKey,
       source_language: sourceLanguage,
       target_language: targetLanguage,
       model: selectedModel,
-      provider: provider
+      provider: provider,
+      ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {})
     }
 
     console.log('Request body:', { ...requestBody, api_key: '***' })
