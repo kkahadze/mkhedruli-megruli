@@ -16,11 +16,18 @@ import {
 const SHOW_SETTINGS = true
 const DEFAULT_MODEL = 'gpt-5.5'
 const DEFAULT_REASONING_EFFORT = 'none'
-const SERVER_KEY_MODELS = new Set(['gpt-5.5', 'gpt-5.4-nano', 'gemini-3.1-flash-lite-preview'])
+const GEMINI_FLASH_LITE_MODEL = 'gemini-3.1-flash-lite'
+const LEGACY_GEMINI_FLASH_LITE_PREVIEW_MODEL = 'gemini-3.1-flash-lite-preview'
+const SERVER_KEY_MODELS = new Set(['gpt-5.5', 'gpt-5.4-nano', GEMINI_FLASH_LITE_MODEL])
 const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gpt_5_5_reasoning_none_v1'
 const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
 const DEFAULT_API_URL = 'https://argo-translator.onrender.com'
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/+$/, '')
+
+const normalizeSavedModel = (model: string) => {
+  if (model === LEGACY_GEMINI_FLASH_LITE_PREVIEW_MODEL) return GEMINI_FLASH_LITE_MODEL
+  return model
+}
 
 type TranslationError =
   | { type: 'missingApiKey'; providerName: string }
@@ -120,7 +127,11 @@ export default function Home() {
         localStorage.setItem('mingrelian_model', DEFAULT_MODEL)
         localStorage.setItem(MODEL_MIGRATION_KEY, 'true')
       } else if (savedModel) {
-        setSelectedModel(savedModel)
+        const normalizedModel = normalizeSavedModel(savedModel)
+        setSelectedModel(normalizedModel)
+        if (normalizedModel !== savedModel) {
+          localStorage.setItem('mingrelian_model', normalizedModel)
+        }
       }
 
       let nextSourceLanguage = DEFAULT_SITE_DEFAULTS.sourceLanguage
@@ -210,7 +221,7 @@ export default function Home() {
     { value: 'gpt-5.2', label: 'GPT-5.2', provider: 'openai' },
     { value: 'claude-sonnet-4-5-20250929', label: 'Claude Sonnet 4.5', provider: 'anthropic' },
     { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash Preview', provider: 'gemini' },
-    { value: 'gemini-3.1-flash-lite-preview', label: 'Gemini 3.1 Flash Lite', provider: 'gemini' },
+    { value: GEMINI_FLASH_LITE_MODEL, label: 'Gemini 3.1 Flash Lite', provider: 'gemini' },
   ]
 
   const getProvider = () => {
