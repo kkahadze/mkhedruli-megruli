@@ -11,23 +11,24 @@ import {
   isTranslationLanguage,
   type TranslationLanguage,
 } from '@/utils/siteDefaults'
+import {
+  DEFAULT_MODEL,
+  PUBLIC_MODELS,
+  PUBLIC_PROVIDERS,
+  formatProviderName,
+  getProviderForModel,
+  getReasoningEffortForModel,
+  modelSupportsServerKey,
+  normalizeSavedModel,
+  type ModelProvider,
+} from '@/utils/modelOptions'
 
 // Toggle this to show/hide settings UI (API keys will be handled server-side when false)
 const SHOW_SETTINGS = true
-const DEFAULT_MODEL = 'gpt-5.5'
-const DEFAULT_REASONING_EFFORT = 'none'
-const GEMINI_FLASH_LITE_MODEL = 'gemini-3.1-flash-lite'
-const LEGACY_GEMINI_FLASH_LITE_PREVIEW_MODEL = 'gemini-3.1-flash-lite-preview'
-const SERVER_KEY_MODELS = new Set(['gpt-5.5', 'gpt-5.4-nano', GEMINI_FLASH_LITE_MODEL])
-const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gpt_5_5_reasoning_none_v1'
+const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_public_openai_v1'
 const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
 const DEFAULT_API_URL = 'https://argo-translator.onrender.com'
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/+$/, '')
-
-const normalizeSavedModel = (model: string) => {
-  if (model === LEGACY_GEMINI_FLASH_LITE_PREVIEW_MODEL) return GEMINI_FLASH_LITE_MODEL
-  return model
-}
 
 type TranslationError =
   | { type: 'missingApiKey'; providerName: string }
@@ -122,16 +123,11 @@ export default function Home() {
         setGeminiKey(savedGeminiKey)
         setRememberGemini(true)
       }
-      if (!modelMigrationApplied) {
-        setSelectedModel(DEFAULT_MODEL)
-        localStorage.setItem('mingrelian_model', DEFAULT_MODEL)
+      const normalizedModel = normalizeSavedModel(savedModel)
+      setSelectedModel(normalizedModel)
+      if (!modelMigrationApplied || normalizedModel !== savedModel) {
+        localStorage.setItem('mingrelian_model', normalizedModel)
         localStorage.setItem(MODEL_MIGRATION_KEY, 'true')
-      } else if (savedModel) {
-        const normalizedModel = normalizeSavedModel(savedModel)
-        setSelectedModel(normalizedModel)
-        if (normalizedModel !== savedModel) {
-          localStorage.setItem('mingrelian_model', normalizedModel)
-        }
       }
 
       let nextSourceLanguage = DEFAULT_SITE_DEFAULTS.sourceLanguage
@@ -211,35 +207,18 @@ export default function Home() {
     }
   }, [preferencesReady, rememberGemini, geminiKey])
 
-  const models = [
-    { value: 'gpt-5.5', label: 'GPT-5.5 (Reasoning None)', provider: 'openai' },
-    { value: 'gpt-5.4-nano', label: 'GPT-5.4 Nano', provider: 'openai' },
-    { value: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', provider: 'openai' },
-    { value: 'gpt-5.4', label: 'GPT-5.4', provider: 'openai' },
-    { value: 'gpt-5-2025-08-07', label: 'GPT-5', provider: 'openai' },
-    { value: 'gpt-5-pro-2025-10-06', label: 'GPT-5 Pro', provider: 'openai' },
-    { value: 'gpt-5.2', label: 'GPT-5.2', provider: 'openai' },
-    { value: 'claude-sonnet-4-5-20250929', label: 'Claude Sonnet 4.5', provider: 'anthropic' },
-    { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash Preview', provider: 'gemini' },
-    { value: GEMINI_FLASH_LITE_MODEL, label: 'Gemini 3.1 Flash Lite', provider: 'gemini' },
-  ]
-
   const getProvider = () => {
-    return models.find(m => m.value === selectedModel)?.provider || 'openai'
+    return getProviderForModel(selectedModel)
   }
 
-  const getApiKeyForProvider = (provider: string) => {
+  const getApiKeyForProvider = (provider: ModelProvider) => {
     if (provider === 'anthropic') return anthropicKey
     if (provider === 'gemini') return geminiKey
     return openaiKey
   }
 
   const selectedModelSupportsServerKey = () => {
-    return SERVER_KEY_MODELS.has(selectedModel)
-  }
-
-  const getReasoningEffortForModel = (model: string) => {
-    return model === DEFAULT_MODEL ? DEFAULT_REASONING_EFFORT : undefined
+    return modelSupportsServerKey(selectedModel)
   }
 
   const hasApiKey = () => {
@@ -319,7 +298,7 @@ export default function Home() {
     console.log('🚀 Starting translation...', { provider, model: selectedModel, sourceLanguage, targetLanguage })
 
     if (SHOW_SETTINGS && !selectedModelSupportsServerKey() && !userApiKey) {
-      const providerName = provider === 'anthropic' ? 'Anthropic' : provider === 'gemini' ? 'Gemini' : 'OpenAI'
+      const providerName = formatProviderName(provider)
       showError({ type: 'missingApiKey', providerName })
       return
     }
@@ -473,6 +452,24 @@ export default function Home() {
     setLanguage(defaults.uiLanguage)
   }
 
+  const languageRowClass = [
+    'grid items-center gap-2 sm:grid-cols-[76px_1fr] sm:gap-4 md:block md:w-full md:flex-1',
+    selectorGridClass,
+  ].join(' ')
+
+  const languageButtonClass = (isSelected: boolean) =>
+    [
+      'h-12 min-w-0 overflow-hidden rounded-xl border px-1 font-semibold leading-tight transition-colors sm:h-[52px] sm:px-2 sm:text-base',
+      selectorButtonTextClass,
+      isSelected
+        ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-[0_0_0_1px_rgba(37,99,235,0.08)]'
+        : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-gray-50',
+      'md:h-auto md:rounded-none md:border-x-0 md:border-t-0 md:bg-transparent md:px-0 md:pb-1 md:text-sm md:leading-normal md:shadow-none md:hover:bg-transparent',
+      isSelected
+        ? 'md:border-b-2 md:border-blue-600 md:text-blue-700'
+        : 'md:border-b-2 md:border-transparent md:text-gray-700 md:hover:border-transparent md:hover:text-gray-900',
+    ].join(' ')
+
   return (
     <>
       <Navbar 
@@ -499,38 +496,33 @@ export default function Home() {
           setRememberGemini={setRememberGemini}
           selectedModel={selectedModel}
           setSelectedModel={setSelectedModel}
-          models={models}
+          models={PUBLIC_MODELS}
+          availableProviders={PUBLIC_PROVIDERS}
           onClearSettings={clearSettings}
         />
       )}
 
-      <main className="mx-auto max-w-3xl px-4 py-7 sm:px-6 sm:py-10">
+      <main className="mx-auto max-w-3xl px-4 py-7 sm:px-6 sm:py-10 md:max-w-7xl md:py-8 lg:px-8">
         {/* SEO intro (visible, non-spammy) */}
-        <div className="mb-6 text-[1.02rem] leading-7 text-gray-600 sm:text-lg">
-          <span className="font-bold text-gray-950">{t('introTitle')}</span>
+        <div className="mb-6 text-[1.02rem] leading-7 text-gray-600 sm:text-lg md:mb-4 md:text-sm md:leading-normal">
+          <span className="font-bold text-gray-950 md:font-medium md:text-gray-900">{t('introTitle')}</span>
           {' — '}
           {t('introDescription')}
         </div>
 
         {/* Language Selector Bar */}
-        <div className="mb-7 rounded-xl border border-gray-200 bg-white px-3 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:px-6">
-          <div className={['grid items-center gap-2 sm:grid-cols-[76px_1fr] sm:gap-4', selectorGridClass].join(' ')}>
-            <div className={['font-semibold leading-tight text-gray-950 sm:text-lg', selectorLabelClass].join(' ')}>
+        <div className="mb-7 rounded-xl border border-gray-200 bg-white px-3 py-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:px-6 md:mb-6 md:flex md:flex-row md:items-center md:justify-center md:gap-3 md:rounded-lg md:border-gray-200/70 md:bg-white/90 md:p-3 md:shadow-md md:backdrop-blur-sm">
+          <div className={languageRowClass}>
+            <div className={['font-semibold leading-tight text-gray-950 sm:text-lg md:hidden', selectorLabelClass].join(' ')}>
               {t('fromLanguage')}
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 md:flex md:flex-wrap md:items-center md:justify-start md:gap-3 md:px-1">
               {languageOptions.map((opt) => (
                 <button
                   key={`src-${opt.value}`}
                   type="button"
                   onClick={() => setSourceLanguageSafe(opt.value)}
-                  className={[
-                    'h-12 min-w-0 overflow-hidden rounded-xl border px-1 font-semibold leading-tight transition-colors sm:h-[52px] sm:px-2 sm:text-base',
-                    selectorButtonTextClass,
-                    sourceLanguage === opt.value
-                      ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-[0_0_0_1px_rgba(37,99,235,0.08)]'
-                      : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-gray-50',
-                  ].join(' ')}
+                  className={languageButtonClass(sourceLanguage === opt.value)}
                 >
                   {opt.label}
                 </button>
@@ -538,8 +530,8 @@ export default function Home() {
             </div>
           </div>
 
-          <div className={['my-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:my-5 sm:pl-[76px]', selectorDividerClass].join(' ')}>
-            <div className="h-px bg-gray-200" />
+          <div className={['my-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:my-5 sm:pl-[76px] md:my-0 md:block md:pl-0', selectorDividerClass].join(' ')}>
+            <div className="h-px bg-gray-200 md:hidden" />
             <button
               onClick={() => {
                 // Swap languages
@@ -566,33 +558,30 @@ export default function Home() {
                   setResult(null)
                 }
               }}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-gray-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-gray-700 transition-colors hover:bg-gray-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 md:self-center md:p-2 md:text-gray-600 md:hover:bg-gray-100 md:hover:text-blue-600"
               title={t('swapLanguages')}
             >
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-6 w-6 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7l4-4m0 0l4 4m-4-4v18m4-4l-4 4m0 0l-4-4" />
               </svg>
+              <svg className="hidden h-5 w-5 md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
             </button>
-            <div className="h-px bg-gray-200" />
+            <div className="h-px bg-gray-200 md:hidden" />
           </div>
 
-          <div className={['grid items-center gap-2 sm:grid-cols-[76px_1fr] sm:gap-4', selectorGridClass].join(' ')}>
-            <div className={['font-semibold leading-tight text-gray-950 sm:text-lg', selectorLabelClass].join(' ')}>
+          <div className={languageRowClass}>
+            <div className={['font-semibold leading-tight text-gray-950 sm:text-lg md:hidden', selectorLabelClass].join(' ')}>
               {t('toLanguage')}
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 md:flex md:flex-wrap md:items-center md:justify-end md:gap-3 md:px-1">
               {languageOptions.map((opt) => (
                 <button
                   key={`tgt-${opt.value}`}
                   type="button"
                   onClick={() => setTargetLanguageSafe(opt.value)}
-                  className={[
-                    'h-12 min-w-0 overflow-hidden rounded-xl border px-1 font-semibold leading-tight transition-colors sm:h-[52px] sm:px-2 sm:text-base',
-                    selectorButtonTextClass,
-                    targetLanguage === opt.value
-                      ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-[0_0_0_1px_rgba(37,99,235,0.08)]'
-                      : 'border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-gray-50',
-                  ].join(' ')}
+                  className={languageButtonClass(targetLanguage === opt.value)}
                 >
                   {opt.label}
                 </button>
@@ -602,25 +591,25 @@ export default function Home() {
         </div>
 
         {/* Main Translation Interface */}
-      <div className="space-y-5 sm:space-y-7">
+      <div className="space-y-5 sm:space-y-7 md:grid md:grid-cols-2 md:gap-6 md:space-y-0">
         {/* Input Section */}
-        <div className="space-y-5">
+        <div className="space-y-5 md:space-y-4">
 
-          <div className="relative min-h-[300px] rounded-xl border border-gray-300 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:min-h-[420px]">
+          <div className="relative min-h-[300px] rounded-xl border border-gray-300 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:min-h-[420px] md:min-h-0 md:rounded-lg md:border-gray-200/70 md:bg-white/90 md:p-4 md:shadow-md md:backdrop-blur-sm">
               <textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder={t('sourceTextPlaceholder')}
-                className="h-full min-h-[300px] w-full resize-none rounded-xl bg-transparent px-4 py-5 text-lg leading-relaxed text-gray-950 placeholder:text-gray-500 focus:outline-none sm:min-h-[420px] sm:px-6"
+                className="h-full min-h-[300px] w-full resize-none rounded-xl bg-transparent px-4 py-5 text-lg leading-relaxed text-gray-950 placeholder:text-gray-500 focus:outline-none sm:min-h-[420px] sm:px-6 md:h-64 md:min-h-0 md:rounded-md md:border md:border-gray-300 md:px-3 md:py-2 md:text-sm md:focus:border-blue-500 md:focus:ring-1 md:focus:ring-blue-500"
               />
               {inputTransliteration && (
-                <div className="pointer-events-none absolute bottom-12 left-4 right-4 rounded-md border border-gray-200 bg-gray-50/95 px-3 py-2 text-xs italic text-gray-500 sm:left-6 sm:right-6">
+                <div className="pointer-events-none absolute bottom-12 left-4 right-4 rounded-md border border-gray-200 bg-gray-50/95 px-3 py-2 text-xs italic text-gray-500 sm:left-6 sm:right-6 md:bottom-12 md:left-6 md:right-6">
                   {inputTransliteration}
                 </div>
               )}
             {/* Character counter */}
-            <div className="absolute bottom-4 right-4 sm:right-6">
-              <span className={`text-sm ${inputText.length > 100 ? 'font-semibold text-red-600' : 'text-gray-500'}`}>
+            <div className="absolute bottom-4 right-4 sm:right-6 md:static md:mt-2 md:text-right">
+              <span className={`text-sm md:text-xs ${inputText.length > 100 ? 'font-semibold text-red-600' : 'text-gray-500'}`}>
                 {inputText.length}/100 {t('characters')}
               </span>
             </div>
@@ -629,12 +618,12 @@ export default function Home() {
           {!loading ? (
             <button
               onClick={handleTranslate}
-              className="h-14 w-full rounded-lg bg-blue-700 px-4 text-lg font-bold text-white shadow-[0_1px_2px_rgba(37,99,235,0.18)] transition-colors hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+              className="h-14 w-full rounded-lg bg-blue-700 px-4 text-lg font-bold text-white shadow-[0_1px_2px_rgba(37,99,235,0.18)] transition-colors hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 md:h-auto md:rounded-md md:bg-blue-600 md:py-3 md:text-sm md:font-semibold md:shadow-sm md:hover:bg-blue-500"
             >
               {t('translate')}
             </button>
           ) : (
-            <div className="flex h-14 items-center justify-center gap-3 rounded-lg border border-gray-200 bg-gray-50">
+            <div className="flex h-14 items-center justify-center gap-3 rounded-lg border border-gray-200 bg-gray-50 md:h-auto md:rounded-md md:py-4">
               <div className="flex gap-1">
                 <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                 <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -647,31 +636,31 @@ export default function Home() {
           )}
 
           {errorMessage && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 md:rounded-md">
               {errorMessage}
             </div>
           )}
         </div>
 
         {/* Output Section */}
-        <div className="min-h-[230px] rounded-xl border border-gray-300 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:min-h-[300px] sm:p-6">
+        <div className="min-h-[230px] rounded-xl border border-gray-300 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:min-h-[300px] sm:p-6 md:min-h-0 md:rounded-none md:border-0 md:bg-transparent md:p-0 md:shadow-none">
           {result ? (
-            <div className="space-y-4">
-              <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <div className="space-y-4 md:rounded-lg md:border md:border-gray-200/70 md:bg-white/90 md:p-4 md:shadow-md md:backdrop-blur-sm">
+              <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 md:font-medium md:mb-2">
                 {t(targetLanguage)}
               </div>
-              <div className="text-xl leading-relaxed text-gray-950">
+              <div className="text-xl leading-relaxed text-gray-950 md:min-h-[120px] md:text-lg md:text-gray-900">
                 {resultText}
               </div>
               {resultTransliteration && (
-                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm italic text-gray-500">
+                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm italic text-gray-500 md:text-xs">
                   {resultTransliteration}
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex min-h-[190px] items-center justify-center sm:min-h-[250px]">
-              <p className="text-base text-gray-500">{t('translationWillAppear')}</p>
+            <div className="flex min-h-[190px] items-center justify-center sm:min-h-[250px] md:h-64 md:min-h-0 md:rounded-lg md:border-2 md:border-dashed md:border-gray-300 md:bg-gray-50">
+              <p className="text-base text-gray-500 md:text-sm">{t('translationWillAppear')}</p>
             </div>
           )}
         </div>

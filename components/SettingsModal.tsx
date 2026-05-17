@@ -1,6 +1,11 @@
 'use client'
 
 import { useLanguage } from '@/contexts/LanguageContext'
+import {
+  formatProviderName,
+  type ModelOption,
+  type ModelProvider,
+} from '@/utils/modelOptions'
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -19,7 +24,8 @@ interface SettingsModalProps {
   setRememberGemini: (remember: boolean) => void
   selectedModel: string
   setSelectedModel: (model: string) => void
-  models: Array<{ value: string; label: string; provider: string }>
+  models: readonly ModelOption[]
+  availableProviders: readonly ModelProvider[]
   onClearSettings: () => void | Promise<void>
 }
 
@@ -41,9 +47,13 @@ export default function SettingsModal({
   selectedModel,
   setSelectedModel,
   models,
+  availableProviders,
   onClearSettings,
 }: SettingsModalProps) {
   const { t } = useLanguage()
+  const showOpenaiKey = availableProviders.includes('openai')
+  const showAnthropicKey = availableProviders.includes('anthropic')
+  const showGeminiKey = availableProviders.includes('gemini')
   
   if (!isOpen) return null
 
@@ -74,12 +84,14 @@ export default function SettingsModal({
           {/* Content */}
           <div className="p-6 space-y-6">
             {/* API Keys Section */}
+            {availableProviders.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">
                 {t('apiKeysSection')}
               </h3>
               <div className="space-y-4">
                 {/* OpenAI Key */}
+                {showOpenaiKey && (
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {t('openaiApiKey')}
@@ -104,8 +116,10 @@ export default function SettingsModal({
                     {t('getKeyAt')} <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">platform.openai.com</a>
                   </p>
                 </div>
+                )}
 
                 {/* Anthropic Key */}
+                {showAnthropicKey && (
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {t('anthropicApiKey')}
@@ -130,8 +144,10 @@ export default function SettingsModal({
                     {t('getKeyAt')} <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">console.anthropic.com</a>
                   </p>
                 </div>
+                )}
 
                 {/* Gemini Key */}
+                {showGeminiKey && (
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {t('geminiApiKey')}
@@ -156,8 +172,10 @@ export default function SettingsModal({
                     {t('getKeyAt')} <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">aistudio.google.com</a>
                   </p>
                 </div>
+                )}
               </div>
             </div>
+            )}
 
             {/* Model Selection */}
             <div>
@@ -175,11 +193,7 @@ export default function SettingsModal({
                 >
                   {models.map((model) => (
                     <option key={model.value} value={model.value}>
-                      {model.label} ({
-                        model.provider === 'openai' ? 'OpenAI' : 
-                        model.provider === 'anthropic' ? 'Anthropic' : 
-                        'Gemini'
-                      })
+                      {model.label} ({formatProviderName(model.provider)})
                     </option>
                   ))}
                 </select>

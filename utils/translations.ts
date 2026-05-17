@@ -26,7 +26,7 @@ export const translations = {
     
     // Main page - Warning
     apiKeyRequired: 'API Key Required',
-    apiKeyRequiredMessage: 'Click the Settings button in the top right to add your OpenAI or Anthropic API key.',
+    apiKeyRequiredMessage: 'Click the Settings button in the top right to add your OpenAI API key.',
     
     // Settings Modal - Header
     settingsTitle: 'Settings',
@@ -45,7 +45,7 @@ export const translations = {
     // Settings Modal - Model
     aiModelSection: 'AI Model',
     selectModel: 'Select Model',
-    modelDescription: 'Different models may produce different translation quality and speed',
+    modelDescription: 'Choose which public OpenAI model to use for translations',
     
     // Settings Modal - Danger Zone
     dangerZone: 'Danger Zone',
@@ -103,7 +103,7 @@ export const translations = {
     
     // Main page - Warning
     apiKeyRequired: 'საჭიროა API გასაღები',
-    apiKeyRequiredMessage: 'დააჭირეთ პარამეტრები ღილაკს ზემოთ მარჯვნივ, რომ დაამატოთ თქვენი OpenAI ან Anthropic API გასაღები.',
+    apiKeyRequiredMessage: 'დააჭირეთ პარამეტრები ღილაკს ზემოთ მარჯვნივ, რომ დაამატოთ თქვენი OpenAI API გასაღები.',
     
     // Settings Modal - Header
     settingsTitle: 'პარამეტრები',
@@ -122,7 +122,7 @@ export const translations = {
     // Settings Modal - Model
     aiModelSection: 'AI მოდელი',
     selectModel: 'აირჩიეთ მოდელი',
-    modelDescription: 'სხვადასხვა მოდელმა შეიძლება განსხვავებული თარგმანის ხარისხი და სიჩქარე გამოიღოს',
+    modelDescription: 'აირჩიეთ რომელი საჯარო OpenAI მოდელი გამოიყენოს თარგმნისთვის',
     
     // Settings Modal - Danger Zone
     dangerZone: 'საშიში ზონა',

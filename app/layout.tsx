@@ -55,7 +55,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-white`}>
+      <body className={`${inter.className} bg-white md:bg-gradient-to-br md:from-gray-50 md:via-blue-50/30 md:to-gray-50`}>
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-1B6NY0YVJH"
