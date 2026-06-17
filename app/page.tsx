@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, type KeyboardEvent } from 'react'
 import { mkhedruliToLatinized, latinizedToMkhedruli, isGeorgianScript } from '@/utils/transliterate'
 import Navbar from '@/components/Navbar'
 import SettingsModal from '@/components/SettingsModal'
@@ -413,6 +413,15 @@ export default function Home() {
     }
   }
 
+  const handleInputKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
+
+    event.preventDefault()
+    if (!loading) {
+      void handleTranslate()
+    }
+  }
+
   const clearSettings = async () => {
     localStorage.clear()
 
@@ -561,6 +570,7 @@ export default function Home() {
               <textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleInputKeyDown}
                 placeholder={t('sourceTextPlaceholder')}
                 className="w-full h-40 md:h-64 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
               />
