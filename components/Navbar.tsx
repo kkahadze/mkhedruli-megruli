@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 interface NavbarProps {
@@ -20,7 +21,11 @@ export default function Navbar({ onSettingsClick, hasApiKey, showSettings = true
     <nav className="border-b border-gray-200/50 bg-white/80 backdrop-blur-sm shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="flex items-center gap-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            aria-label={t('appTitle')}
+          >
             <Image
               src="/mkhedruli-logo.png"
               alt="Mkhedruli Logo"
@@ -28,10 +33,10 @@ export default function Navbar({ onSettingsClick, hasApiKey, showSettings = true
               height={40}
               className="rounded"
             />
-            <h1 className="text-2xl font-bold text-gray-900 cursor-default">
+            <span className="text-2xl font-bold text-gray-900">
               {t('appTitle')}
-            </h1>
-          </div>
+            </span>
+          </Link>
           
           <div className="flex items-center gap-2">
             {/* Language Toggle */}

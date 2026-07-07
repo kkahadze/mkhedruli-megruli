@@ -475,8 +475,8 @@ export default function Home() {
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* SEO intro (visible, non-spammy) */}
-        <div className="mb-4 text-sm text-gray-600">
-          <span className="font-medium text-gray-900">{t('introTitle')}</span>
+        <div id="about" className="mb-4 scroll-mt-24 text-sm text-gray-600">
+          <h1 className="inline font-medium text-gray-900">{t('introTitle')}</h1>
           {' — '}
           {t('introDescription')}
         </div>
@@ -676,7 +676,7 @@ export default function Home() {
       </div>
 
       {/* Contact Section */}
-      <div className="mt-24 pt-8 border-t border-gray-200">
+      <div id="feedback" className="mt-24 scroll-mt-24 border-t border-gray-200 pt-8">
         <div className="rounded-lg border border-blue-100 bg-blue-50/50 backdrop-blur-sm p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-blue-900 mb-2">
             {t('contactTitle')}
