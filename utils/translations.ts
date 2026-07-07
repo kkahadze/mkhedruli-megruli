@@ -75,6 +75,21 @@ export const translations = {
     introDescription: 'Translate Mingrelian (Megrelian / Megruli), Georgian, and English.',
     swapLanguages: 'Swap languages',
     characters: 'characters',
+
+    // Footer and updates
+    footerAbout: 'About',
+    footerUpdates: 'Updates',
+    footerFeedback: 'Feedback',
+    footerLastUpdated: 'Last updated July 2026',
+    updatesTitle: 'Updates',
+    updatesDescription: 'Meaningful improvements to Mkhedruli translation quality, coverage, and reliability.',
+    updatesBack: 'Back to translator',
+    updatesJuly2026: 'July 2026',
+    updatesCoverage: 'Expanded Mingrelian vocabulary and phrase coverage.',
+    updatesShortTranslations: 'Improved accuracy for short and ambiguous translations.',
+    updatesMkhedruli: 'Improved consistency of Mkhedruli output.',
+    updatesReliability: 'Improved translation reliability across Mingrelian, Georgian, and English.',
+    updatesPerformance: 'Improved overall performance and stability.',
   },
   ka: {
     // Navbar
@@ -150,6 +165,21 @@ export const translations = {
     introDescription: 'თარგმნეთ მეგრული, ქართული და ინგლისური.',
     swapLanguages: 'ენების გაცვლა',
     characters: 'სიმბოლო',
+
+    // Footer and updates
+    footerAbout: 'შესახებ',
+    footerUpdates: 'განახლებები',
+    footerFeedback: 'გამოხმაურება',
+    footerLastUpdated: 'ბოლოს განახლდა: 2026 წლის ივლისი',
+    updatesTitle: 'განახლებები',
+    updatesDescription: 'Mkhedruli-ის თარგმანის ხარისხის, დაფარვისა და საიმედოობის მნიშვნელოვანი გაუმჯობესებები.',
+    updatesBack: 'მთარგმნელზე დაბრუნება',
+    updatesJuly2026: '2026 წლის ივლისი',
+    updatesCoverage: 'გაფართოვდა მეგრული ლექსიკისა და ფრაზების დაფარვა.',
+    updatesShortTranslations: 'გაუმჯობესდა მოკლე და ორაზროვანი თარგმანების სიზუსტე.',
+    updatesMkhedruli: 'გაუმჯობესდა მხედრული დამწერლობით მიღებული შედეგების თანმიმდევრულობა.',
+    updatesReliability: 'გაუმჯობესდა თარგმანის საიმედოობა მეგრულ, ქართულ და ინგლისურ ენებს შორის.',
+    updatesPerformance: 'გაუმჯობესდა საერთო წარმადობა და სტაბილურობა.',
   },
 }
 
