@@ -1,11 +1,11 @@
 # Mkhedruli - Mingrelian Translator
 
-A modern Next.js application for translating Mingrelian text to Georgian and English using AI models, including the GPT-5.4 family and Anthropic Claude Sonnet 4.5.
+A modern Next.js application for translating Mingrelian text to Georgian and English using AI models, defaulting to GPT-5.6 Luna with low reasoning.
 
 ## Features
 
 - 🌐 Translate Mingrelian to English or Georgian
-- 🤖 Support for multiple AI models (GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5, Claude Sonnet 4.5)
+- 🤖 Support for multiple AI models, including GPT-5.6 Luna, GPT-5.5, and Claude Sonnet 4.5
 - 💾 Save API keys locally in browser
 - 🎨 Clean, minimalist UI with two-column layout
 - 📱 Responsive design

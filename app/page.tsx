@@ -14,10 +14,10 @@ import {
 
 // Toggle this to show/hide settings UI (API keys will be handled server-side when false)
 const SHOW_SETTINGS = true
-const DEFAULT_MODEL = 'gpt-5.5'
-const DEFAULT_REASONING_EFFORT = 'none'
-const SERVER_KEY_MODELS = new Set(['gpt-5.5', 'gpt-5.4-nano', 'gemini-3.1-flash-lite-preview'])
-const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gpt_5_5_reasoning_none_v1'
+const DEFAULT_MODEL = 'gpt-5.6-luna'
+const DEFAULT_REASONING_EFFORT = 'low'
+const SERVER_KEY_MODELS = new Set(['gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4-nano', 'gemini-3.1-flash-lite-preview'])
+const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gpt_5_6_luna_reasoning_low_v1'
 const VISITOR_ID_STORAGE_KEY = 'mingrelian_visitor_id'
 const VISITOR_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
 const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
@@ -210,6 +210,7 @@ export default function Home() {
   }, [preferencesReady, rememberGemini, geminiKey])
 
   const models = [
+    { value: 'gpt-5.6-luna', label: 'GPT-5.6 Luna (Reasoning Low)', provider: 'openai' },
     { value: 'gpt-5.5', label: 'GPT-5.5 (Reasoning None)', provider: 'openai' },
     { value: 'gpt-5.4-nano', label: 'GPT-5.4 Nano', provider: 'openai' },
     { value: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', provider: 'openai' },
