@@ -264,6 +264,11 @@ export default function Home() {
     }
   }, [inputText, sourceLanguage])
 
+  const resultTransliteration = useMemo(() => {
+    if (!result || targetLanguage !== 'mingrelian') return ''
+    return result.mingrelian_latinized || mkhedruliToLatinized(result.mingrelian_mkhedruli)
+  }, [result, targetLanguage])
+
   const handleTranslate = async () => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
@@ -688,9 +693,9 @@ export default function Home() {
                     <div className="text-lg text-gray-900 leading-relaxed min-h-[120px] pb-8">
                       {result.mingrelian_mkhedruli || (result.mingrelian_latinized && latinizedToMkhedruli(result.mingrelian_latinized))}
                     </div>
-                    {result.mingrelian_latinized && (
+                    {resultTransliteration && (
                       <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic border border-gray-200/50">
-                        {result.mingrelian_latinized}
+                        {resultTransliteration}
                       </div>
                     )}
                   </div>
