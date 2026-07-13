@@ -21,7 +21,7 @@ const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gpt_5_6_luna_reasoning_l
 const VISITOR_ID_STORAGE_KEY = 'mingrelian_visitor_id'
 const VISITOR_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
 const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
-const AUTO_TRANSLATE_DELAY_MS = 2000
+const AUTO_TRANSLATE_DELAY_MS = 1000
 
 const createAnonymousVisitorId = () => {
   if (window.crypto?.randomUUID) {
