@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, type KeyboardEvent } from 'react'
+import { useState, useEffect, useMemo, useRef, type KeyboardEvent } from 'react'
 import { mkhedruliToLatinized, latinizedToMkhedruli, isGeorgianScript } from '@/utils/transliterate'
 import Navbar from '@/components/Navbar'
 import SettingsModal from '@/components/SettingsModal'
@@ -21,6 +21,7 @@ const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gpt_5_6_luna_reasoning_l
 const VISITOR_ID_STORAGE_KEY = 'mingrelian_visitor_id'
 const VISITOR_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
 const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
+const AUTO_TRANSLATE_DELAY_MS = 2000
 
 const createAnonymousVisitorId = () => {
   if (window.crypto?.randomUUID) {
@@ -58,6 +59,10 @@ export default function Home() {
   const [rememberAnthropic, setRememberAnthropic] = useState(false)
   const [rememberGemini, setRememberGemini] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const activeRequestRef = useRef<AbortController | null>(null)
+  const requestIdRef = useRef(0)
+  const translateRef = useRef<() => void>(() => {})
   
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -260,6 +265,14 @@ export default function Home() {
   }, [inputText, sourceLanguage])
 
   const handleTranslate = async () => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = null
+    }
+
+    activeRequestRef.current?.abort()
+    activeRequestRef.current = null
+    const requestId = ++requestIdRef.current
     const startTime = performance.now()
     const provider = getProvider()
     const userApiKey = getApiKeyForProvider(provider)
@@ -299,6 +312,9 @@ export default function Home() {
     setError('')
     setLoading(true)
 
+    const controller = new AbortController()
+    activeRequestRef.current = controller
+
     const reasoningEffort = getReasoningEffortForModel(selectedModel)
     const requestBody = {
       prompt: inputText,
@@ -313,15 +329,13 @@ export default function Home() {
 
     console.log('Request body:', { ...requestBody, api_key: '***', visitor_id: '***' })
 
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+      console.error('Request timed out after 1 minute')
+    }, 60000) // 1 minute timeout
+
     try {
       console.log('Sending request to API...')
-      
-      // Create abort controller for timeout
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => {
-        controller.abort()
-        console.error('Request timed out after 1 minute')
-      }, 60000) // 1 minute timeout
 
       // Switch between local and production
       const apiUrl = 'https://argo-translator.onrender.com'
@@ -396,11 +410,17 @@ export default function Home() {
         const duration = ((endTime - startTime) / 1000).toFixed(2)
         console.log(`✅ Translation completed in ${duration}s`)
         console.log(`⏱️  Total time: ${duration} seconds (${Math.round(endTime - startTime)}ms)`)
-        setResult(finalResult)
+        if (requestId === requestIdRef.current) {
+          setResult(finalResult)
+        }
       } else {
-        setError(t('noResult'))
+        if (requestId === requestIdRef.current) {
+          setError(t('noResult'))
+        }
       }
     } catch (err: any) {
+      if (requestId !== requestIdRef.current) return
+
       const endTime = performance.now()
       const duration = ((endTime - startTime) / 1000).toFixed(2)
       console.error(`❌ Translation failed after ${duration}s:`, err)
@@ -410,16 +430,61 @@ export default function Home() {
         setError(`${t('networkError')}: ${err.message}`)
       }
     } finally {
-      setLoading(false)
+      clearTimeout(timeoutId)
+      if (requestId === requestIdRef.current) {
+        activeRequestRef.current = null
+        setLoading(false)
+      }
     }
   }
+
+  translateRef.current = () => {
+    void handleTranslate()
+  }
+
+  useEffect(() => {
+    if (!preferencesReady) return
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+    activeRequestRef.current?.abort()
+    activeRequestRef.current = null
+    requestIdRef.current += 1
+    setLoading(false)
+    setError('')
+    setResult(null)
+
+    if (!inputText.trim() || inputText.length > 100 || sourceLanguage === targetLanguage) {
+      debounceTimerRef.current = null
+      return
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      debounceTimerRef.current = null
+      translateRef.current()
+    }, AUTO_TRANSLATE_DELAY_MS)
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+        debounceTimerRef.current = null
+      }
+    }
+  }, [inputText, preferencesReady, selectedModel, sourceLanguage, targetLanguage])
+
+  useEffect(() => {
+    return () => {
+      activeRequestRef.current?.abort()
+    }
+  }, [])
 
   const handleInputKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return
 
     event.preventDefault()
     if (!loading) {
-      void handleTranslate()
+      translateRef.current()
     }
   }
 
@@ -589,14 +654,7 @@ export default function Home() {
             </div>
           </div>
           
-          {!loading ? (
-            <button
-              onClick={handleTranslate}
-              className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors"
-            >
-              {t('translate')}
-            </button>
-          ) : (
+          {loading && (
             <div className="flex items-center justify-center gap-3 py-4 rounded-md bg-gray-50 border border-gray-200">
               <div className="flex gap-1">
                 <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
