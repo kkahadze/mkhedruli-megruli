@@ -5,12 +5,35 @@ import Navbar from '@/components/Navbar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import type { TranslationKey } from '@/utils/translations'
 
-const JULY_2026_UPDATES: TranslationKey[] = [
-  'updatesCoverage',
-  'updatesShortTranslations',
-  'updatesMkhedruli',
-  'updatesReliability',
-  'updatesPerformance',
+const UPDATE_GROUPS: {
+  id: string
+  date: string
+  label: TranslationKey
+  updates: TranslationKey[]
+}[] = [
+  {
+    id: 'august-2026',
+    date: '2026-08',
+    label: 'updatesAugust2026',
+    updates: [
+      'updatesVisualDesign',
+      'updatesLanguagePanels',
+      'updatesNavigationAndSettings',
+      'updatesMobileLayout',
+    ],
+  },
+  {
+    id: 'july-2026',
+    date: '2026-07',
+    label: 'updatesJuly2026',
+    updates: [
+      'updatesCoverage',
+      'updatesShortTranslations',
+      'updatesMkhedruli',
+      'updatesReliability',
+      'updatesPerformance',
+    ],
+  },
 ]
 
 export default function UpdatesPage() {
@@ -35,23 +58,29 @@ export default function UpdatesPage() {
           </p>
         </header>
 
-        <section className="py-8" aria-labelledby="july-2026-heading">
-          <time
-            id="july-2026-heading"
-            dateTime="2026-07"
-            className="text-sm font-semibold text-[var(--accent)]"
+        {UPDATE_GROUPS.map((group, index) => (
+          <section
+            key={group.id}
+            className={index === 0 ? 'py-8' : 'border-t border-[color:var(--border)] py-8'}
+            aria-labelledby={`${group.id}-heading`}
           >
-            {t('updatesJuly2026')}
-          </time>
-          <ul className="mt-5 space-y-4 text-sm leading-7 text-[var(--foreground)]">
-            {JULY_2026_UPDATES.map((key) => (
-              <li key={key} className="flex gap-3">
-                <span aria-hidden="true" className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-                <span>{t(key)}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+            <time
+              id={`${group.id}-heading`}
+              dateTime={group.date}
+              className="text-sm font-semibold text-[var(--accent)]"
+            >
+              {t(group.label)}
+            </time>
+            <ul className="mt-5 space-y-4 text-sm leading-7 text-[var(--foreground)]">
+              {group.updates.map((key) => (
+                <li key={key} className="flex gap-3">
+                  <span aria-hidden="true" className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+                  <span>{t(key)}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </main>
     </>
   )
