@@ -11,6 +11,9 @@ const SITE_NAME = 'Mkhedruli Mingrelian Translator'
 const SITE_DESCRIPTION =
   'Free Mingrelian translator for English and Georgian. Translate Mingrelian (Megrelian / Megruli) instantly with automatic Georgian-script transliteration.'
 const SITE_LOGO = `${SITE_URL}/mkhedruli-logo.png`
+const SITE_SOCIAL_IMAGE = `${SITE_URL}/social-preview.png`
+const SITE_SOCIAL_IMAGE_ALT =
+  'Mkhedruli Mingrelian Translator translating between English, Georgian, and Mingrelian'
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -96,10 +99,11 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     images: [
       {
-        url: SITE_LOGO,
-        width: 1024,
-        height: 1024,
-        alt: 'Mkhedruli Mingrelian Translator logo',
+        url: SITE_SOCIAL_IMAGE,
+        type: 'image/png',
+        width: 1200,
+        height: 630,
+        alt: SITE_SOCIAL_IMAGE_ALT,
       },
     ],
   },
@@ -107,7 +111,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Mingrelian Translator (Megrelian / Megruli) — Mkhedruli',
     description: SITE_DESCRIPTION,
-    images: [SITE_LOGO],
+    images: [{ url: SITE_SOCIAL_IMAGE, alt: SITE_SOCIAL_IMAGE_ALT }],
   },
 }
 
