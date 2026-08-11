@@ -520,6 +520,7 @@ export default function Home() {
         onSettingsClick={SHOW_SETTINGS ? () => setIsSettingsOpen(true) : undefined}
         hasApiKey={hasApiKey()}
         showSettings={SHOW_SETTINGS}
+        primaryHeading
       />
       
       {SHOW_SETTINGS && (
@@ -547,7 +548,6 @@ export default function Home() {
 
       <main className="mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pt-16 lg:px-8">
         <div id="about" className="sr-only">
-          <h1>{t('introTitle')}</h1>
           <p>{t('introDescription')}</p>
         </div>
 

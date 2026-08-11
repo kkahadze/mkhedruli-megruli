@@ -8,10 +8,17 @@ interface NavbarProps {
   onSettingsClick?: () => void
   hasApiKey: boolean
   showSettings?: boolean
+  primaryHeading?: boolean
 }
 
-export default function Navbar({ onSettingsClick, hasApiKey, showSettings = true }: NavbarProps) {
+export default function Navbar({
+  onSettingsClick,
+  hasApiKey,
+  showSettings = true,
+  primaryHeading = false,
+}: NavbarProps) {
   const { language, setLanguage, t } = useLanguage()
+  const BrandTitle = primaryHeading ? 'h1' : 'span'
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'ka' : 'en')
@@ -33,9 +40,9 @@ export default function Navbar({ onSettingsClick, hasApiKey, showSettings = true
               height={36}
               className="h-9 w-9 shrink-0 rounded-md"
             />
-            <span className="truncate text-[15px] font-semibold text-[var(--foreground)] sm:text-base">
+            <BrandTitle className="truncate text-[15px] font-semibold text-[var(--foreground)] sm:text-base">
               {t('appTitle')}
-            </span>
+            </BrandTitle>
           </Link>
           
           <div className="flex shrink-0 items-center gap-2">

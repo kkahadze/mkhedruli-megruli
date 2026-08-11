@@ -6,11 +6,53 @@ import { LanguageProvider } from '@/contexts/LanguageContext'
 import SiteFooter from '@/components/SiteFooter'
 
 const inter = Inter({ subsets: ['latin'] })
+const SITE_URL = 'https://www.mkhedruli.com'
+const SITE_NAME = 'Mkhedruli Mingrelian Translator'
+const SITE_DESCRIPTION =
+  'Free Mingrelian translator for English and Georgian. Translate Mingrelian (Megrelian / Megruli) instantly with automatic Georgian-script transliteration.'
+const SITE_LOGO = `${SITE_URL}/mkhedruli-logo.png`
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: `${SITE_URL}/`,
+      name: SITE_NAME,
+      alternateName: ['Mingrelian Translator', 'Mkhedruli Translator'],
+      description: SITE_DESCRIPTION,
+      publisher: { '@id': `${SITE_URL}/#organization` },
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: `${SITE_URL}/`,
+      logo: {
+        '@type': 'ImageObject',
+        url: SITE_LOGO,
+        width: 1024,
+        height: 1024,
+      },
+    },
+    {
+      '@type': 'WebApplication',
+      '@id': `${SITE_URL}/#translator`,
+      name: 'Mingrelian Translator',
+      url: `${SITE_URL}/`,
+      applicationCategory: 'EducationalApplication',
+      operatingSystem: 'Any',
+      inLanguage: ['en', 'ka', 'xmf'],
+      description: SITE_DESCRIPTION,
+      provider: { '@id': `${SITE_URL}/#organization` },
+    },
+  ],
+}
 
 export const metadata: Metadata = {
   title: 'Mingrelian Translator (Megrelian / Megruli) — Mkhedruli',
-  description:
-    'Translate Mingrelian (Megrelian / Megruli) to English and Georgian. Translate Georgian ↔ English. Megruli targmani / margaluri translator.',
+  description: SITE_DESCRIPTION,
   keywords: [
     'Mingrelian translator',
     'Megrelian translator',
@@ -25,27 +67,47 @@ export const metadata: Metadata = {
     'Mingrelian to English',
     'Mingrelian to Georgian',
   ],
-  metadataBase: new URL('https://www.mkhedruli.com'),
+  metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: '/',
   },
   icons: {
-    icon: '/mkhedruli-logo.png',
-    apple: '/mkhedruli-logo.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-48x48.png', type: 'image/png', sizes: '48x48' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', type: 'image/png', sizes: '180x180' }],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
   openGraph: {
     type: 'website',
-    url: 'https://www.mkhedruli.com',
+    url: SITE_URL,
     title: 'Mingrelian Translator (Megrelian / Megruli) — Mkhedruli',
-    description:
-      'Translate Mingrelian (Megrelian / Megruli) to English and Georgian. Translate Georgian ↔ English.',
-    siteName: 'Mkhedruli',
+    description: SITE_DESCRIPTION,
+    siteName: SITE_NAME,
+    images: [
+      {
+        url: SITE_LOGO,
+        width: 1024,
+        height: 1024,
+        alt: 'Mkhedruli Mingrelian Translator logo',
+      },
+    ],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Mingrelian Translator (Megrelian / Megruli) — Mkhedruli',
-    description:
-      'Translate Mingrelian (Megrelian / Megruli) to English and Georgian. Translate Georgian ↔ English.',
+    description: SITE_DESCRIPTION,
+    images: [SITE_LOGO],
   },
 }
 
@@ -57,6 +119,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }}
+        />
         {/* Google Analytics */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-1B6NY0YVJH"
