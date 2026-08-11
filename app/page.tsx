@@ -545,29 +545,28 @@ export default function Home() {
         />
       )}
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* SEO intro (visible, non-spammy) */}
-        <div id="about" className="mb-4 scroll-mt-24 text-sm text-gray-600">
-          <h1 className="inline font-medium text-gray-900">{t('introTitle')}</h1>
-          {' — '}
-          {t('introDescription')}
+      <main className="mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pt-16 lg:px-8">
+        <div id="about" className="sr-only">
+          <h1>{t('introTitle')}</h1>
+          <p>{t('introDescription')}</p>
         </div>
 
         {/* Language Selector Bar */}
-        <div className="mb-6 flex flex-col items-stretch justify-center gap-3 rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-3 shadow-md sm:flex-row sm:items-center">
+        <div className="mb-4 flex flex-col items-stretch justify-center gap-3 rounded-lg border border-[color:var(--border)] bg-[var(--surface)] px-4 py-3 sm:flex-row sm:items-center sm:gap-5">
           {/* Source language tabs */}
           <div className="w-full sm:flex-1">
-            <div className="flex flex-wrap items-center justify-center gap-3 px-1 sm:justify-start">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:justify-start">
               {languageOptions.map((opt) => (
                 <button
                   key={`src-${opt.value}`}
                   type="button"
                   onClick={() => setSourceLanguageSafe(opt.value)}
+                  aria-pressed={sourceLanguage === opt.value}
                   className={[
-                    'whitespace-nowrap pb-1 text-sm font-semibold transition-colors',
+                    'whitespace-nowrap border-b-2 pb-1 text-[13px] font-medium transition-colors',
                     sourceLanguage === opt.value
-                      ? 'text-blue-700 border-b-2 border-blue-600'
-                      : 'text-gray-700 hover:text-gray-900 border-b-2 border-transparent',
+                      ? 'border-[var(--accent)] text-[var(--accent)]'
+                      : 'border-transparent text-[var(--muted)] hover:text-[var(--foreground)]',
                   ].join(' ')}
                 >
                   {opt.label}
@@ -602,27 +601,29 @@ export default function Home() {
                 setResult(null)
               }
             }}
-            className="self-center shrink-0 rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+            className="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-md border border-[color:var(--border)] text-[var(--muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
             title={t('swapLanguages')}
+            aria-label={t('swapLanguages')}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
             </svg>
           </button>
 
           {/* Target language tabs */}
           <div className="w-full sm:flex-1">
-            <div className="flex flex-wrap items-center justify-center gap-3 px-1 sm:justify-end">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:justify-end">
               {languageOptions.map((opt) => (
                 <button
                   key={`tgt-${opt.value}`}
                   type="button"
                   onClick={() => setTargetLanguageSafe(opt.value)}
+                  aria-pressed={targetLanguage === opt.value}
                   className={[
-                    'whitespace-nowrap pb-1 text-sm font-semibold transition-colors',
+                    'whitespace-nowrap border-b-2 pb-1 text-[13px] font-medium transition-colors',
                     targetLanguage === opt.value
-                      ? 'text-blue-700 border-b-2 border-blue-600'
-                      : 'text-gray-700 hover:text-gray-900 border-b-2 border-transparent',
+                      ? 'border-[var(--accent)] text-[var(--accent)]'
+                      : 'border-transparent text-[var(--muted)] hover:text-[var(--foreground)]',
                   ].join(' ')}
                 >
                   {opt.label}
@@ -633,48 +634,49 @@ export default function Home() {
         </div>
 
         {/* Main Translation Interface */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 md:gap-5">
         {/* Input Section */}
-        <div className="space-y-4">
+        <div className="space-y-3">
 
-          <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
-            <div className="relative">
+          <div className="flex min-h-[292px] flex-col rounded-lg border border-[color:var(--border)] bg-[var(--surface)]">
+            <div className="relative flex-1 px-5 pt-5">
               <textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={handleInputKeyDown}
                 placeholder={t('sourceTextPlaceholder')}
-                className="w-full h-40 md:h-64 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                aria-label={t('sourceText')}
+                className="h-[212px] w-full resize-none border-0 bg-transparent p-0 text-base leading-7 text-[var(--foreground)] outline-none placeholder:text-[#959c98]"
               />
               {inputTransliteration && (
-                <div className="absolute bottom-2 left-2 right-2 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic pointer-events-none border border-gray-200/50">
+                <div className="pointer-events-none absolute bottom-2 left-5 right-5 rounded-md bg-[var(--surface-muted)] px-3 py-2 text-xs italic text-[var(--muted)]">
                   {inputTransliteration}
                 </div>
               )}
             </div>
             {/* Character counter */}
-            <div className="mt-2 text-right">
-              <span className={`text-xs ${inputText.length > 100 ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+            <div className="border-t border-[color:var(--border)] px-5 py-3 text-right">
+              <span className={`text-xs ${inputText.length > 100 ? 'font-semibold text-red-700' : 'text-[var(--muted)]'}`}>
                 {inputText.length}/100 {t('characters')}
               </span>
             </div>
           </div>
           
           {loading && (
-            <div className="flex items-center justify-center gap-3 py-4 rounded-md bg-gray-50 border border-gray-200">
+            <div className="flex h-12 items-center justify-center gap-3 rounded-md border border-[color:var(--border)] bg-[var(--surface)]">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                <div className="h-2 w-2 animate-bounce rounded-full bg-[var(--accent)]" style={{ animationDelay: '0ms' }}></div>
+                <div className="h-2 w-2 animate-bounce rounded-full bg-[var(--accent)]" style={{ animationDelay: '150ms' }}></div>
+                <div className="h-2 w-2 animate-bounce rounded-full bg-[var(--accent)]" style={{ animationDelay: '300ms' }}></div>
               </div>
-              <span className="text-gray-600 text-sm font-medium">
+              <span className="text-sm font-medium text-[var(--muted)]">
                 {t('translating')}...
               </span>
             </div>
           )}
 
           {error && (
-            <div className="rounded-md bg-red-50 p-4 text-sm text-red-800 border border-red-200">
+            <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {error}
             </div>
           )}
@@ -686,16 +688,16 @@ export default function Home() {
             <div className="space-y-4">
               {/* Show result based on target language */}
               {targetLanguage === 'mingrelian' && (
-                <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                <div className="flex min-h-[292px] flex-col rounded-lg border border-[color:var(--border)] bg-[var(--surface)] p-5">
+                  <div className="mb-4 text-xs font-medium text-[var(--muted)]">
                     {t('mingrelian')}
                   </div>
-                  <div className="relative">
-                    <div className="text-lg text-gray-900 leading-relaxed min-h-[120px] pb-8">
+                  <div className="relative flex-1">
+                    <div className="min-h-[170px] pb-10 text-lg leading-relaxed text-[var(--foreground)]">
                       {result.mingrelian_mkhedruli || (result.mingrelian_latinized && latinizedToMkhedruli(result.mingrelian_latinized))}
                     </div>
                     {resultTransliteration && (
-                      <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic border border-gray-200/50">
+                      <div className="absolute bottom-0 left-0 right-0 rounded-md bg-[var(--surface-muted)] px-3 py-2 text-xs italic text-[var(--muted)]">
                         {resultTransliteration}
                       </div>
                     )}
@@ -704,16 +706,16 @@ export default function Home() {
               )}
 
               {targetLanguage === 'georgian' && (
-                <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                <div className="flex min-h-[292px] flex-col rounded-lg border border-[color:var(--border)] bg-[var(--surface)] p-5">
+                  <div className="mb-4 text-xs font-medium text-[var(--muted)]">
                     {t('georgian')}
                   </div>
-                  <div className="relative">
-                    <div className="text-lg text-gray-900 leading-relaxed min-h-[120px] pb-8">
+                  <div className="relative flex-1">
+                    <div className="min-h-[170px] pb-10 text-lg leading-relaxed text-[var(--foreground)]">
                       {result.georgian}
                     </div>
                     {result.georgian && (
-                      <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-gray-50/90 backdrop-blur-sm rounded text-xs text-gray-500 italic border border-gray-200/50">
+                      <div className="absolute bottom-0 left-0 right-0 rounded-md bg-[var(--surface-muted)] px-3 py-2 text-xs italic text-[var(--muted)]">
                         {mkhedruliToLatinized(result.georgian)}
                       </div>
                     )}
@@ -722,38 +724,40 @@ export default function Home() {
               )}
 
               {targetLanguage === 'english' && (
-                <div className="rounded-lg border border-gray-200/70 bg-white/90 backdrop-blur-sm p-4 shadow-md">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                <div className="min-h-[292px] rounded-lg border border-[color:var(--border)] bg-[var(--surface)] p-5">
+                  <div className="mb-4 text-xs font-medium text-[var(--muted)]">
                     {t('english')}
                   </div>
-                  <div className="text-lg text-gray-900 leading-relaxed">{result.english}</div>
+                  <div className="text-lg leading-relaxed text-[var(--foreground)]">{result.english}</div>
                 </div>
               )}
             </div>
           )}
 
           {!result && !loading && (
-            <div className="h-64 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
-              <p className="text-sm text-gray-500">{t('translationWillAppear')}</p>
+            <div className="flex min-h-[292px] items-center justify-center rounded-lg border border-[color:var(--border)] bg-[var(--surface)] px-5 text-center">
+              <p className="text-sm text-[var(--muted)]">{t('translationWillAppear')}</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Contact Section */}
-      <div id="feedback" className="mt-24 scroll-mt-24 border-t border-gray-200 pt-8">
-        <div className="rounded-lg border border-blue-100 bg-blue-50/50 backdrop-blur-sm p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">
-            {t('contactTitle')}
-          </h3>
-          <p className="text-sm text-gray-700 mb-3">
-            {t('contactMessage')}
-          </p>
+      <div id="feedback" className="mt-20 scroll-mt-24 border-t border-[color:var(--border)] pt-8 sm:mt-24">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-[var(--foreground)]">
+              {t('contactTitle')}
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+              {t('contactMessage')}
+            </p>
+          </div>
           <a 
             href="mailto:konstantinekahadze@gmail.com"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition-colors break-all sm:break-normal"
+            className="inline-flex items-center gap-2 break-all text-sm font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)] sm:break-normal"
           >
-            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             <span className="break-all">konstantinekahadze@gmail.com</span>

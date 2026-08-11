@@ -51,37 +51,45 @@ export default function SettingsModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+        className="fixed inset-0 z-40 bg-black/40 transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div
+          className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-lg border border-[color:var(--border)] bg-[var(--surface)] shadow-[0_18px_60px_rgba(32,37,34,0.16)]"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="settings-title"
+        >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">{t('settingsTitle')}</h2>
+          <div className="flex shrink-0 items-center justify-between border-b border-[color:var(--border)] px-6 py-5">
+            <h2 id="settings-title" className="text-lg font-semibold text-[var(--foreground)]">
+              {t('settingsTitle')}
+            </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--foreground)]"
+              aria-label={t('done')}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-6">
+          <div className="space-y-8 overflow-y-auto px-6 py-6">
             {/* API Keys Section */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">
+              <h3 className="mb-5 text-sm font-semibold text-[var(--foreground)]">
                 {t('apiKeysSection')}
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {/* OpenAI Key */}
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="border-b border-[color:var(--border)] pb-5">
+                  <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
                     {t('openaiApiKey')}
                   </label>
                   <input
@@ -89,25 +97,25 @@ export default function SettingsModal({
                     value={openaiKey}
                     onChange={(e) => setOpenaiKey(e.target.value)}
                     placeholder={t('openaiPlaceholder')}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                    className="h-10 w-full rounded-md border border-[color:var(--border)] bg-white px-3 text-sm outline-none transition-colors focus:border-[var(--accent)]"
                   />
-                  <label className="mt-2 flex items-center text-sm text-gray-600">
+                  <label className="mt-3 flex items-center text-sm text-[var(--muted)]">
                     <input
                       type="checkbox"
                       checked={rememberOpenai}
                       onChange={(e) => setRememberOpenai(e.target.checked)}
-                      className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="mr-2 h-4 w-4 rounded border-[color:var(--border)] accent-[var(--accent)]"
                     />
                     {t('rememberKey')}
                   </label>
-                  <p className="mt-2 text-xs text-gray-500">
-                    {t('getKeyAt')} <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">platform.openai.com</a>
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    {t('getKeyAt')} <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">platform.openai.com</a>
                   </p>
                 </div>
 
                 {/* Anthropic Key */}
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="border-b border-[color:var(--border)] pb-5">
+                  <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
                     {t('anthropicApiKey')}
                   </label>
                   <input
@@ -115,25 +123,25 @@ export default function SettingsModal({
                     value={anthropicKey}
                     onChange={(e) => setAnthropicKey(e.target.value)}
                     placeholder={t('anthropicPlaceholder')}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                    className="h-10 w-full rounded-md border border-[color:var(--border)] bg-white px-3 text-sm outline-none transition-colors focus:border-[var(--accent)]"
                   />
-                  <label className="mt-2 flex items-center text-sm text-gray-600">
+                  <label className="mt-3 flex items-center text-sm text-[var(--muted)]">
                     <input
                       type="checkbox"
                       checked={rememberAnthropic}
                       onChange={(e) => setRememberAnthropic(e.target.checked)}
-                      className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="mr-2 h-4 w-4 rounded border-[color:var(--border)] accent-[var(--accent)]"
                     />
                     {t('rememberKey')}
                   </label>
-                  <p className="mt-2 text-xs text-gray-500">
-                    {t('getKeyAt')} <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">console.anthropic.com</a>
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    {t('getKeyAt')} <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">console.anthropic.com</a>
                   </p>
                 </div>
 
                 {/* Gemini Key */}
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
                     {t('geminiApiKey')}
                   </label>
                   <input
@@ -141,37 +149,37 @@ export default function SettingsModal({
                     value={geminiKey}
                     onChange={(e) => setGeminiKey(e.target.value)}
                     placeholder={t('geminiPlaceholder')}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                    className="h-10 w-full rounded-md border border-[color:var(--border)] bg-white px-3 text-sm outline-none transition-colors focus:border-[var(--accent)]"
                   />
-                  <label className="mt-2 flex items-center text-sm text-gray-600">
+                  <label className="mt-3 flex items-center text-sm text-[var(--muted)]">
                     <input
                       type="checkbox"
                       checked={rememberGemini}
                       onChange={(e) => setRememberGemini(e.target.checked)}
-                      className="mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="mr-2 h-4 w-4 rounded border-[color:var(--border)] accent-[var(--accent)]"
                     />
                     {t('rememberKey')}
                   </label>
-                  <p className="mt-2 text-xs text-gray-500">
-                    {t('getKeyAt')} <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">aistudio.google.com</a>
+                  <p className="mt-2 text-xs text-[var(--muted)]">
+                    {t('getKeyAt')} <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">aistudio.google.com</a>
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Model Selection */}
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wide">
+            <div className="border-t border-[color:var(--border)] pt-6">
+              <h3 className="mb-4 text-sm font-semibold text-[var(--foreground)]">
                 {t('aiModelSection')}
               </h3>
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
                   {t('selectModel')}
                 </label>
                 <select
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                  className="h-10 w-full rounded-md border border-[color:var(--border)] bg-white px-3 text-sm outline-none transition-colors focus:border-[var(--accent)]"
                 >
                   {models.map((model) => (
                     <option key={model.value} value={model.value}>
@@ -183,18 +191,18 @@ export default function SettingsModal({
                     </option>
                   ))}
                 </select>
-                <p className="mt-2 text-xs text-gray-500">
+                <p className="mt-2 text-xs text-[var(--muted)]">
                   {t('modelDescription')}
                 </p>
               </div>
             </div>
 
             {/* Danger Zone */}
-            <div>
-              <h3 className="text-sm font-semibold text-red-700 mb-4 uppercase tracking-wide">
+            <div className="border-t border-[color:var(--border)] pt-6">
+              <h3 className="mb-4 text-sm font-semibold text-[var(--foreground)]">
                 {t('dangerZone')}
               </h3>
-              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+              <div>
                 <button
                   onClick={() => {
                     if (confirm(t('clearConfirm'))) {
@@ -202,11 +210,11 @@ export default function SettingsModal({
                       onClose()
                     }
                   }}
-                  className="text-sm text-red-700 hover:text-red-800 font-medium underline"
+                  className="text-sm font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
                 >
                   {t('clearAllSettings')}
                 </button>
-                <p className="mt-2 text-xs text-red-600">
+                <p className="mt-2 text-xs text-[var(--muted)]">
                   {t('clearDescription')}
                 </p>
               </div>
@@ -214,10 +222,10 @@ export default function SettingsModal({
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex shrink-0 justify-end border-t border-[color:var(--border)] px-6 py-4">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="h-10 rounded-md bg-[var(--accent)] px-5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
             >
               {t('done')}
             </button>
