@@ -3,18 +3,25 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 255, 255, 255;
+  --background: #f7f8f7;
+  --surface: #ffffff;
+  --surface-muted: #f1f3f1;
+  --foreground: #202522;
+  --muted: #68716d;
+  --border: #e1e5e2;
+  --accent: #92243c;
+  --accent-hover: #751a30;
+  --accent-soft: #f8edef;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  color: var(--foreground);
+  background: var(--background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+::selection {
+  color: var(--foreground);
+  background: #efdee3;
+}

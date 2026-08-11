@@ -18,37 +18,38 @@ export default function Navbar({ onSettingsClick, hasApiKey, showSettings = true
   }
 
   return (
-    <nav className="border-b border-gray-200/50 bg-white/80 backdrop-blur-sm shadow-sm">
+    <nav className="border-b border-[color:var(--border)] bg-[var(--surface)]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-[72px] items-center justify-between gap-4">
           <Link
             href="/"
-            className="flex items-center gap-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="flex min-w-0 items-center gap-3 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
             aria-label={t('appTitle')}
           >
             <Image
               src="/mkhedruli-logo.png"
               alt="Mkhedruli Logo"
-              width={40}
-              height={40}
-              className="rounded"
+              width={36}
+              height={36}
+              className="h-9 w-9 shrink-0 rounded-md"
             />
-            <span className="text-2xl font-bold text-gray-900">
+            <span className="truncate text-[15px] font-semibold text-[var(--foreground)] sm:text-base">
               {t('appTitle')}
             </span>
           </Link>
           
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-2 rounded-lg border border-gray-200/50 bg-white/80 px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-white hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="flex h-10 items-center gap-2 rounded-md border border-[color:var(--border)] bg-white px-3 text-sm font-medium text-[var(--muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
               title={language === 'en' ? t('switchToGeorgian') : t('switchToEnglish')}
+              aria-label={language === 'en' ? t('switchToGeorgian') : t('switchToEnglish')}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
               </svg>
-              <span className="hidden sm:inline font-semibold">
+              <span className="hidden sm:inline">
                 {language === 'en' ? 'ქარ' : 'EN'}
               </span>
             </button>
@@ -57,10 +58,11 @@ export default function Navbar({ onSettingsClick, hasApiKey, showSettings = true
             {showSettings && onSettingsClick && (
               <button
                 onClick={onSettingsClick}
-                className="relative flex items-center gap-2 rounded-lg border border-gray-200/50 bg-white/80 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-white hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="relative flex h-10 items-center gap-2 rounded-md border border-[color:var(--border)] bg-white px-3 text-sm font-medium text-[var(--muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
                 title={t('settings')}
+                aria-label={t('settings')}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
