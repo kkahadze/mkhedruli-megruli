@@ -11,13 +11,17 @@ import {
   isTranslationLanguage,
   type TranslationLanguage,
 } from '@/utils/siteDefaults'
+import {
+  DEFAULT_MODEL,
+  getReasoningEffortForModel,
+  loadSelectedModel,
+  MODEL_STORAGE_KEY,
+  models,
+  SERVER_KEY_MODELS,
+} from '@/utils/translationModels'
 
 // Toggle this to show/hide settings UI (API keys will be handled server-side when false)
 const SHOW_SETTINGS = true
-const DEFAULT_MODEL = 'gpt-5.6-sol'
-const DEFAULT_REASONING_EFFORT = 'none'
-const SERVER_KEY_MODELS = new Set(['gpt-5.6-sol', 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4-nano', 'gemini-3.1-flash-lite-preview'])
-const MODEL_MIGRATION_KEY = 'mingrelian_model_migration_gpt_5_6_sol_reasoning_none_v1'
 const VISITOR_ID_STORAGE_KEY = 'mingrelian_visitor_id'
 const VISITOR_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
 const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
@@ -109,8 +113,6 @@ export default function Home() {
       const savedOpenaiKey = localStorage.getItem('mingrelian_openai_key')
       const savedAnthropicKey = localStorage.getItem('mingrelian_anthropic_key')
       const savedGeminiKey = localStorage.getItem('mingrelian_gemini_key')
-      const savedModel = localStorage.getItem('mingrelian_model')
-      const modelMigrationApplied = localStorage.getItem(MODEL_MIGRATION_KEY) === 'true'
       const savedSourceLang = localStorage.getItem('mingrelian_source_lang')
       const savedTargetLang = localStorage.getItem('mingrelian_target_lang')
       const rememberOpenai = localStorage.getItem('mingrelian_remember_openai_key') === 'true'
@@ -129,13 +131,7 @@ export default function Home() {
         setGeminiKey(savedGeminiKey)
         setRememberGemini(true)
       }
-      if (!modelMigrationApplied) {
-        setSelectedModel(DEFAULT_MODEL)
-        localStorage.setItem('mingrelian_model', DEFAULT_MODEL)
-        localStorage.setItem(MODEL_MIGRATION_KEY, 'true')
-      } else if (savedModel) {
-        setSelectedModel(savedModel)
-      }
+      setSelectedModel(loadSelectedModel(localStorage))
 
       let nextSourceLanguage = DEFAULT_SITE_DEFAULTS.sourceLanguage
       let nextTargetLanguage = DEFAULT_SITE_DEFAULTS.targetLanguage
@@ -171,7 +167,7 @@ export default function Home() {
   // Save preferences when they change
   useEffect(() => {
     if (!preferencesReady) return
-    localStorage.setItem('mingrelian_model', selectedModel)
+    localStorage.setItem(MODEL_STORAGE_KEY, selectedModel)
   }, [preferencesReady, selectedModel])
 
   useEffect(() => {
@@ -214,21 +210,6 @@ export default function Home() {
     }
   }, [preferencesReady, rememberGemini, geminiKey])
 
-  const models = [
-    { value: 'gpt-5.6-sol', label: 'GPT-5.6 Sol (Reasoning None)', provider: 'openai' },
-    { value: 'gpt-5.6-luna', label: 'GPT-5.6 Luna (Reasoning Low)', provider: 'openai' },
-    { value: 'gpt-5.5', label: 'GPT-5.5 (Reasoning None)', provider: 'openai' },
-    { value: 'gpt-5.4-nano', label: 'GPT-5.4 Nano', provider: 'openai' },
-    { value: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', provider: 'openai' },
-    { value: 'gpt-5.4', label: 'GPT-5.4', provider: 'openai' },
-    { value: 'gpt-5-2025-08-07', label: 'GPT-5', provider: 'openai' },
-    { value: 'gpt-5-pro-2025-10-06', label: 'GPT-5 Pro', provider: 'openai' },
-    { value: 'gpt-5.2', label: 'GPT-5.2', provider: 'openai' },
-    { value: 'claude-sonnet-4-5-20250929', label: 'Claude Sonnet 4.5', provider: 'anthropic' },
-    { value: 'gemini-3-flash-preview', label: 'Gemini 3 Flash Preview', provider: 'gemini' },
-    { value: 'gemini-3.1-flash-lite-preview', label: 'Gemini 3.1 Flash Lite', provider: 'gemini' },
-  ]
-
   const getProvider = () => {
     return models.find(m => m.value === selectedModel)?.provider || 'openai'
   }
@@ -241,10 +222,6 @@ export default function Home() {
 
   const selectedModelSupportsServerKey = () => {
     return SERVER_KEY_MODELS.has(selectedModel)
-  }
-
-  const getReasoningEffortForModel = (model: string) => {
-    return model === DEFAULT_MODEL ? DEFAULT_REASONING_EFFORT : undefined
   }
 
   const hasApiKey = () => {
