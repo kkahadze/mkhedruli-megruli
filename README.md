@@ -1,11 +1,11 @@
 # Mkhedruli - Mingrelian Translator
 
-A modern Next.js application for translating Mingrelian text to Georgian and English using AI models, defaulting to GPT-5.6 Luna with low reasoning.
+A modern Next.js application for translating Mingrelian text to Georgian and English using AI models, defaulting to GPT-6 Sol with reasoning set to none.
 
 ## Features
 
 - 🌐 Translate Mingrelian to English or Georgian
-- 🤖 Support for multiple AI models, including GPT-5.6 Luna, GPT-5.5, and Claude Sonnet 4.5
+- 🤖 Support for multiple AI models, including GPT-6 Sol, GPT-5.6 Luna, GPT-5.5, and Claude Sonnet 4.5
 - 💾 Save API keys locally in browser
 - 🎨 Clean, minimalist UI with two-column layout
 - 📱 Responsive design
@@ -46,7 +46,7 @@ npm start
 ## Usage
 
 1. **Enter API Keys (Optional)**: Add your OpenAI, Anthropic, or Gemini API keys if you want to override the server-side defaults
-2. **Select Model**: Choose between GPT-5.4 Nano (default), other GPT-5 variants, Claude Sonnet 4.5, or Gemini
+2. **Select Model**: Choose between GPT-6 Sol (default), GPT-5 variants, Claude Sonnet 4.5, or Gemini
 3. **Input Text**: Enter Mingrelian text in the left panel (latinized or mkhedruli script)
 4. **Choose Target**: Select English or Georgian as target language
 5. **Translate**: Click the translate button
