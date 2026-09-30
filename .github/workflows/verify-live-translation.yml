@@ -2,6 +2,12 @@ name: Verify live translation
 
 on:
   workflow_dispatch:
+    inputs:
+      backend_only:
+        description: Verify only the backend default without requesting a provider translation
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -14,5 +20,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test the smoke verifier offline
         run: python3 -m unittest discover -s tests -p 'test_live_translation.py'
+      - name: Check only the deployed backend default
+        if: ${{ inputs.backend_only }}
+        run: python3 scripts/verify_live_translation.py --backend-only
       - name: Check the public website and server-key translation
+        if: ${{ !inputs.backend_only }}
         run: python3 scripts/verify_live_translation.py

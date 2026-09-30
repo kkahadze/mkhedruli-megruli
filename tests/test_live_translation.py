@@ -84,6 +84,17 @@ class LiveTranslationTests(unittest.TestCase):
         self.assertNotIsInstance(error.exception, smoke.BackendDefaultMismatch)
         self.assertNotIn("private upstream text", str(error.exception))
 
+    def test_backend_only_checks_the_live_default_without_touching_the_website_or_translating(self):
+        detail = "Model gpt-6.1-sol does not support reasoning effort 'none'; use 'low' or higher."
+        with patch.object(smoke, "get", return_value=json.dumps({"paths": {"/chat": {}}})) as get, \
+                patch.object(smoke, "read", side_effect=rejection(detail)) as read, \
+                patch("builtins.print") as output:
+            self.assertEqual(smoke.main(["--backend-only"]), 0)
+        get.assert_called_once_with(smoke.API + "/openapi.json")
+        self.assertEqual(read.call_count, 1)
+        self.assertNotIn("model", json.loads(read.call_args.args[0].data))
+        self.assertIn("no provider translation was requested", str(output.call_args))
+
     def test_accepts_target_script_and_refuses_old_server_errors_shortcuts_and_empty(self):
         payload = {"target_text": "\u10db\u10d0", "full_response": "Translation: synthetic"}
         smoke.verify_sse(event({"status": "working"}) + event({"result": payload}))

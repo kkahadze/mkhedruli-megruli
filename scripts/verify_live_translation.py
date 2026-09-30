@@ -1,5 +1,6 @@
 """Manually dispatched production check; uses one public synthetic sentence."""
 
+import argparse
 from html.parser import HTMLParser
 import json
 import re
@@ -116,21 +117,31 @@ def verify_backend_default():
         raise BackendDefaultMismatch("backend accepted unsupported reasoning for its default; explicit translation was not sent")
 
 
-def smoke():
-    html = get(SITE + "?" + urlencode({"production_smoke": int(time.time())}))
-    if not website_model_installed(html, get):
-        raise ValueError("public website is not serving the GPT-6.1 Sol default bundle")
+def verify_backend():
     openapi = json.loads(get(API + "/openapi.json"))
     if "/chat" not in openapi.get("paths", {}):
         raise ValueError("production translation route is missing")
     verify_backend_default()
+
+
+def smoke(backend_only=False):
+    if backend_only:
+        verify_backend()
+        return
+    html = get(SITE + "?" + urlencode({"production_smoke": int(time.time())}))
+    if not website_model_installed(html, get):
+        raise ValueError("public website is not serving the GPT-6.1 Sol default bundle")
+    verify_backend()
     verify_sse(read(translation_request({**PROBE, "model": MODEL, "reasoning_effort": REASONING_EFFORT})))
 
 
-def main():
+def main(argv=()):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--backend-only", action="store_true", help="verify the deployed backend default without a provider translation")
+    args = parser.parse_args(argv)
     for attempt in range(1, 13):
         try:
-            smoke()
+            smoke(backend_only=args.backend_only)
         except BackendDefaultMismatch as error:
             print(f"Backend default mismatch: {error}", flush=True)
             return 1
@@ -140,10 +151,13 @@ def main():
                 return 1
             time.sleep(20)
         else:
-            print("Live website and backend default to GPT-6.1 Sol; explicit public server-key translation returned target-script text.", flush=True)
+            if args.backend_only:
+                print("Live backend default is GPT-6.1 Sol with low as its minimum; no provider translation was requested.", flush=True)
+            else:
+                print("Live website and backend default to GPT-6.1 Sol; explicit public server-key translation returned target-script text.", flush=True)
             return 0
     return 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))
