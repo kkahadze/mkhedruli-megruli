@@ -92,6 +92,34 @@ def translation_request(payload):
     })
 
 
+def matches_model_rejection(detail):
+    return isinstance(detail, str) and bool(
+        re.search(rf"(?<![\w.-]){re.escape(MODEL)}(?![\w-]|\.[\w])", detail, re.IGNORECASE)
+        and re.search(r"\buse\s+[^a-z0-9]{0,3}low\b", detail, re.IGNORECASE)
+    )
+
+
+def backend_mismatch_diagnosis(readiness):
+    try:
+        read(translation_request({**readiness, "model": MODEL}))
+    except HTTPError as error:
+        with error:
+            if error.code != 400:
+                return "explicit-model readiness returned a different HTTP status"
+            try:
+                body = json.loads(error.read(65_536))
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                return "explicit-model readiness returned invalid JSON"
+        detail = body.get("detail") if isinstance(body, dict) else None
+        if matches_model_rejection(detail):
+            return "new backend validation is live, but the configured omitted-model default is still different"
+        if detail == "Source and target languages must be different":
+            return "the public backend has not yet exposed the new model validation"
+    except (OSError, ValueError):
+        return "explicit-model readiness could not be reached or decoded"
+    return "explicit-model readiness did not identify the running backend revision"
+
+
 def verify_backend_default():
     # The prior backend rejects same-language requests without calling its provider.
     # The new backend checks its model's unsupported reasoning before that guard.
@@ -108,11 +136,9 @@ def verify_backend_default():
             except (UnicodeDecodeError, json.JSONDecodeError):
                 raise BackendDefaultMismatch("backend default rejection was not valid JSON") from None
         detail = body.get("detail") if isinstance(body, dict) else None
-        if not isinstance(detail, str) or not (
-            re.search(rf"(?<![\w.-]){re.escape(MODEL)}(?![\w-]|\.[\w])", detail, re.IGNORECASE)
-            and re.search(r"\buse\s+[^a-z0-9]{0,3}low\b", detail, re.IGNORECASE)
-        ):
-            raise BackendDefaultMismatch("backend default rejection did not confirm GPT-6.1 Sol and direct callers to use low")
+        if not matches_model_rejection(detail):
+            diagnosis = backend_mismatch_diagnosis(readiness)
+            raise BackendDefaultMismatch(f"backend default rejection did not confirm GPT-6.1 Sol and low: {diagnosis}")
     else:
         raise BackendDefaultMismatch("backend accepted unsupported reasoning for its default; explicit translation was not sent")
 

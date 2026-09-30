@@ -69,11 +69,16 @@ class LiveTranslationTests(unittest.TestCase):
         ):
             with self.subTest(reply=reply), \
                     patch.object(smoke, "get", side_effect=[html, f"{smoke.MODEL} {smoke.MARKER}", json.dumps({"paths": {"/chat": {}}})]), \
-                    patch.object(smoke, "read", side_effect=[reply]) as read, \
+                    patch.object(smoke, "read", side_effect=[reply, rejection("Source and target languages must be different")]) as read, \
                     patch.object(smoke.time, "sleep") as sleep, \
                     patch("builtins.print") as output:
                 self.assertEqual(smoke.main(), 1)
-                self.assertEqual(read.call_count, 1)
+                self.assertIn(read.call_count, (1, 2))
+                if read.call_count == 2:
+                    diagnostic = json.loads(read.call_args.args[0].data)
+                    self.assertEqual(diagnostic["source_language"], diagnostic["target_language"])
+                    self.assertEqual(diagnostic["model"], smoke.MODEL)
+                    self.assertEqual(diagnostic["reasoning_effort"], "none")
                 sleep.assert_not_called()
                 self.assertNotIn("private upstream text", str(output.call_args_list))
 
@@ -94,6 +99,19 @@ class LiveTranslationTests(unittest.TestCase):
         self.assertEqual(read.call_count, 1)
         self.assertNotIn("model", json.loads(read.call_args.args[0].data))
         self.assertIn("no provider translation was requested", str(output.call_args))
+
+    def test_readiness_distinguishes_old_code_from_new_code_with_old_environment(self):
+        wrong = "Source and target languages must be different"
+        expected = "Model gpt-6.1-sol does not support reasoning effort 'none'; use 'low' or higher."
+        for explicit_detail, diagnostic in (
+            (wrong, "has not yet exposed the new model validation"),
+            (expected, "new backend validation is live, but the configured omitted-model default is still different"),
+        ):
+            with self.subTest(detail=explicit_detail), \
+                    patch.object(smoke, "read", side_effect=[rejection(wrong), rejection(explicit_detail)]) as read:
+                with self.assertRaisesRegex(smoke.BackendDefaultMismatch, diagnostic):
+                    smoke.verify_backend_default()
+                self.assertEqual(read.call_count, 2)
 
     def test_accepts_target_script_and_refuses_old_server_errors_shortcuts_and_empty(self):
         payload = {"target_text": "\u10db\u10d0", "full_response": "Translation: synthetic"}
