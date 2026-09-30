@@ -40,6 +40,9 @@ jobs:
       - name: Test model settings
         run: npm test
 
+      - name: Test the smoke verifier offline
+        run: python3 -m unittest discover -s tests -p 'test_live_translation.py'
+
       - name: Build with Next.js
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}

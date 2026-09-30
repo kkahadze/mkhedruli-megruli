@@ -5,13 +5,24 @@ import json
 import re
 import sys
 import time
+from urllib.error import HTTPError
 from urllib.parse import urlencode, urljoin, urlsplit
 from urllib.request import Request, urlopen
 
 
 SITE = "https://www.mkhedruli.com/"
 API = "https://argo-translator.onrender.com"
-MARKER = "mingrelian_model_migration_gpt_6_sol_reasoning_none_v1"
+MODEL = "gpt-6.1-sol"
+REASONING_EFFORT = "low"
+MARKER = "mingrelian_model_migration_gpt_6_1_sol_reasoning_low_v1"
+PROBE = {
+    "prompt": "The violet telescope arrived just before sunrise, but nobody opened the wooden box.",
+    "source_language": "english", "target_language": "mingrelian", "provider": "openai",
+}
+
+
+class BackendDefaultMismatch(ValueError):
+    pass
 
 
 class Scripts(HTMLParser):
@@ -41,7 +52,7 @@ def page_scripts(html):
 def website_model_installed(html, fetch):
     for url in page_scripts(html):
         script = fetch(url)
-        if MARKER in script and "gpt-6-sol" in script:
+        if MARKER in script and MODEL in script:
             return True
     return False
 
@@ -73,36 +84,63 @@ def get(url):
     return read(Request(url, headers={"User-Agent": "Mkhedruli-production-smoke/1.0", "Cache-Control": "no-cache"}))
 
 
-def smoke():
-    html = get(SITE + "?" + urlencode({"production_smoke": int(time.time())}))
-    if not website_model_installed(html, get):
-        raise ValueError("public website is not serving the GPT-6 Sol default bundle")
-    openapi = json.loads(get(API + "/openapi.json"))
-    if "/chat" not in openapi.get("paths", {}):
-        raise ValueError("production translation route is missing")
-    payload = json.dumps({
-        "prompt": "The violet telescope arrived just before sunrise, but nobody opened the wooden box.",
-        "source_language": "english", "target_language": "mingrelian",
-        "provider": "openai", "model": "gpt-6-sol", "reasoning_effort": "none",
-    }).encode()
-    request = Request(API + "/chat", data=payload, method="POST", headers={
+def translation_request(payload):
+    return Request(API + "/chat", data=json.dumps(payload).encode(), method="POST", headers={
         "Content-Type": "application/json", "Accept": "text/event-stream",
         "User-Agent": "Mkhedruli-production-smoke/1.0",
     })
-    verify_sse(read(request))
+
+
+def verify_backend_default():
+    # The prior backend rejects same-language requests without calling its provider.
+    # The new backend checks its model's unsupported reasoning before that guard.
+    readiness = {"prompt": "Configuration readiness check.", "source_language": "english",
+                 "target_language": "english", "provider": "openai", "reasoning_effort": "none"}
+    try:
+        read(translation_request(readiness))
+    except HTTPError as error:
+        with error:
+            if error.code != 400:
+                raise ValueError(f"backend default check returned unexpected HTTP {error.code}") from None
+            try:
+                body = json.loads(error.read(65_536))
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                raise BackendDefaultMismatch("backend default rejection was not valid JSON") from None
+        detail = body.get("detail") if isinstance(body, dict) else None
+        if not isinstance(detail, str) or not (
+            re.search(rf"(?<![\w.-]){re.escape(MODEL)}(?![\w-]|\.[\w])", detail, re.IGNORECASE)
+            and re.search(r"\buse\s+[^a-z0-9]{0,3}low\b", detail, re.IGNORECASE)
+        ):
+            raise BackendDefaultMismatch("backend default rejection did not confirm GPT-6.1 Sol and direct callers to use low")
+    else:
+        raise BackendDefaultMismatch("backend accepted unsupported reasoning for its default; explicit translation was not sent")
+
+
+def smoke():
+    html = get(SITE + "?" + urlencode({"production_smoke": int(time.time())}))
+    if not website_model_installed(html, get):
+        raise ValueError("public website is not serving the GPT-6.1 Sol default bundle")
+    openapi = json.loads(get(API + "/openapi.json"))
+    if "/chat" not in openapi.get("paths", {}):
+        raise ValueError("production translation route is missing")
+    verify_backend_default()
+    verify_sse(read(translation_request({**PROBE, "model": MODEL, "reasoning_effort": REASONING_EFFORT})))
 
 
 def main():
     for attempt in range(1, 13):
         try:
             smoke()
+        except BackendDefaultMismatch as error:
+            print(f"Backend default mismatch: {error}", flush=True)
+            return 1
         except Exception as error:
             print(f"Attempt {attempt}/12 not ready: {type(error).__name__}: {error}", flush=True)
             if attempt == 12:
                 return 1
             time.sleep(20)
         else:
-            print("Live website defaults to GPT-6 Sol; public server-key translation returned target-script text.", flush=True)
+            print("Live website and backend default to GPT-6.1 Sol; explicit public server-key translation returned target-script text.", flush=True)
             return 0
     return 1
 
