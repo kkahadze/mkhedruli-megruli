@@ -1,11 +1,11 @@
 # Mkhedruli - Mingrelian Translator
 
-A modern Next.js application for translating Mingrelian text to Georgian and English using AI models, defaulting to GPT-6 Sol with reasoning set to none.
+A modern Next.js application for translating Mingrelian text to Georgian and English using AI models, defaulting to GPT-6.1 Sol with reasoning set to low.
 
 ## Features
 
 - 🌐 Translate Mingrelian to English or Georgian
-- 🤖 Support for multiple AI models, including GPT-6 Sol, GPT-5.6 Luna, GPT-5.5, and Claude Sonnet 4.5
+- 🤖 Support for multiple AI models, including GPT-6.1 Sol, GPT-6 Sol, GPT-5.6 Luna, GPT-5.5, and Claude Sonnet 4.5
 - 💾 Save API keys locally in browser
 - 🎨 Clean, minimalist UI with two-column layout
 - 📱 Responsive design
@@ -46,7 +46,7 @@ npm start
 ## Usage
 
 1. **Enter API Keys (Optional)**: Add your OpenAI, Anthropic, or Gemini API keys if you want to override the server-side defaults
-2. **Select Model**: Choose between GPT-6 Sol (default), GPT-5 variants, Claude Sonnet 4.5, or Gemini
+2. **Select Model**: Choose between GPT-6.1 Sol (default), GPT-6 Sol, GPT-5 variants, Claude Sonnet 4.5, or Gemini
 3. **Input Text**: Enter Mingrelian text in the left panel (latinized or mkhedruli script)
 4. **Choose Target**: Select English or Georgian as target language
 5. **Translate**: Click the translate button
@@ -83,6 +83,8 @@ The application connects to the Argo translator API hosted at:
 If the backend is configured with provider API keys in its environment, end users do not need to supply their own keys for the default experience.
 
 The client also generates an anonymous `visitor_id` in `localStorage` and sends it with translation requests so backend analytics can group repeat visits without collecting account details.
+
+The manually dispatched `Verify live translation` GitHub workflow checks the public website and a server-key translation. Select `backend_only` to check the deployed backend model default without requesting a provider translation, which is useful before deploying a website model migration.
 
 ## License
 
