@@ -13,9 +13,9 @@ from urllib.request import Request, urlopen
 
 SITE = "https://www.mkhedruli.com/"
 API = "https://argo-translator.onrender.com"
-MODEL = "gpt-6.1-sol"
+MODEL = "gpt-6-astra"
 REASONING_EFFORT = "low"
-MARKER = "mingrelian_model_migration_gpt_6_1_sol_reasoning_low_v1"
+MARKER = "mingrelian_model_migration_gpt_6_astra_ultrafast_reasoning_low_v1"
 PROBE = {
     "prompt": "The violet telescope arrived just before sunrise, but nobody opened the wooden box.",
     "source_language": "english", "target_language": "mingrelian", "provider": "openai",
@@ -138,7 +138,7 @@ def verify_backend_default():
         detail = body.get("detail") if isinstance(body, dict) else None
         if not matches_model_rejection(detail):
             diagnosis = backend_mismatch_diagnosis(readiness)
-            raise BackendDefaultMismatch(f"backend default rejection did not confirm GPT-6.1 Sol and low: {diagnosis}")
+            raise BackendDefaultMismatch(f"backend default rejection did not confirm GPT-6 Astra and low: {diagnosis}")
     else:
         raise BackendDefaultMismatch("backend accepted unsupported reasoning for its default; explicit translation was not sent")
 
@@ -156,7 +156,7 @@ def smoke(backend_only=False):
         return
     html = get(SITE + "?" + urlencode({"production_smoke": int(time.time())}))
     if not website_model_installed(html, get):
-        raise ValueError("public website is not serving the GPT-6.1 Sol default bundle")
+        raise ValueError("public website is not serving the GPT-6 Astra default bundle")
     verify_backend()
     verify_sse(read(translation_request({**PROBE, "model": MODEL, "reasoning_effort": REASONING_EFFORT})))
 
@@ -178,9 +178,9 @@ def main(argv=()):
             time.sleep(20)
         else:
             if args.backend_only:
-                print("Live backend default is GPT-6.1 Sol with low as its minimum; no provider translation was requested.", flush=True)
+                print("Live backend default is GPT-6 Astra with low as its minimum; no provider translation was requested.", flush=True)
             else:
-                print("Live website and backend default to GPT-6.1 Sol; explicit public server-key translation returned target-script text.", flush=True)
+                print("Live website and backend default to GPT-6 Astra; explicit public server-key translation returned target-script text.", flush=True)
             return 0
     return 1
 

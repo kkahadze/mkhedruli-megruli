@@ -10,6 +10,8 @@ const {
   SERVER_KEY_MODELS,
 } = require('../coverage/model-tests/translationModels.js')
 
+const solDefault = 'gpt-6.1-sol'
+const solMigrationKey = 'mingrelian_model_migration_gpt_6_1_sol_reasoning_low_v1'
 const previousDefault = 'gpt-6-sol'
 const previousMigrationKey = 'mingrelian_model_migration_gpt_6_sol_reasoning_none_v1'
 const legacyDefault = 'gpt-5.6-sol'
@@ -33,23 +35,25 @@ function createStorage(entries = []) {
   }
 }
 
-test('GPT-6.1 Sol is the first selectable model and the previous choices remain', () => {
-  assert.equal(DEFAULT_MODEL, 'gpt-6.1-sol')
-  assert.deepEqual(models[0], { value: DEFAULT_MODEL, label: 'GPT-6.1 Sol (Reasoning Low)', provider: 'openai' })
-  assert.deepEqual(models[1], { value: previousDefault, label: 'GPT-6 Sol (Reasoning None)', provider: 'openai' })
-  assert.deepEqual(models[2], { value: legacyDefault, label: 'GPT-5.6 Sol (Reasoning None)', provider: 'openai' })
-  assert.deepEqual(models.slice(3).map(({ value }) => value), otherModelIds)
+test('GPT-6 Astra is the first selectable model and the previous choices remain', () => {
+  assert.equal(DEFAULT_MODEL, 'gpt-6-astra')
+  assert.deepEqual(models[0], { value: DEFAULT_MODEL, label: 'GPT-6 Astra (Ultrafast, Reasoning Low)', provider: 'openai' })
+  assert.deepEqual(models[1], { value: solDefault, label: 'GPT-6.1 Sol (Reasoning Low)', provider: 'openai' })
+  assert.deepEqual(models[2], { value: previousDefault, label: 'GPT-6 Sol (Reasoning None)', provider: 'openai' })
+  assert.deepEqual(models[3], { value: legacyDefault, label: 'GPT-5.6 Sol (Reasoning None)', provider: 'openai' })
+  assert.deepEqual(models.slice(4).map(({ value }) => value), otherModelIds)
   assert.equal(new Set(models.map(({ value }) => value)).size, models.length)
 })
 
 test('the new model is server-key eligible and no previous eligibility changes', () => {
   assert.deepEqual([...SERVER_KEY_MODELS], [
-    DEFAULT_MODEL, previousDefault, legacyDefault, 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4-nano', 'gemini-3.1-flash-lite-preview',
+    DEFAULT_MODEL, solDefault, previousDefault, legacyDefault, 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4-nano', 'gemini-3.1-flash-lite-preview',
   ])
 })
 
-test('GPT-6.1 Sol explicitly requests low reasoning while all previous overrides stay unchanged', () => {
+test('GPT-6 Astra explicitly requests low reasoning while all previous overrides stay unchanged', () => {
   assert.equal(getReasoningEffortForModel(DEFAULT_MODEL), 'low')
+  assert.equal(getReasoningEffortForModel(solDefault), 'low')
   assert.equal(getReasoningEffortForModel(previousDefault), 'none')
   assert.equal(getReasoningEffortForModel(legacyDefault), 'none')
   for (const model of [...otherModelIds, 'unknown-model']) assert.equal(getReasoningEffortForModel(model), undefined)
@@ -58,7 +62,7 @@ test('GPT-6.1 Sol explicitly requests low reasoning while all previous overrides
 test('new visitors get a persisted default and a migration marker', () => {
   const storage = createStorage()
   assert.notEqual(MODEL_MIGRATION_KEY, previousMigrationKey)
-  assert.equal(MODEL_MIGRATION_KEY, 'mingrelian_model_migration_gpt_6_1_sol_reasoning_low_v1')
+  assert.equal(MODEL_MIGRATION_KEY, 'mingrelian_model_migration_gpt_6_astra_ultrafast_reasoning_low_v1')
   assert.equal(loadSelectedModel(storage), DEFAULT_MODEL)
   assert.deepEqual(storage.writes, [[MODEL_STORAGE_KEY, DEFAULT_MODEL], [MODEL_MIGRATION_KEY, 'true']])
   assert.equal(loadSelectedModel(storage), DEFAULT_MODEL)
@@ -66,13 +70,13 @@ test('new visitors get a persisted default and a migration marker', () => {
 })
 
 test('the previous default migrates regardless of the old marker, without touching other preferences', () => {
-  for (const priorMarker of [[], [[previousMigrationKey, 'true']]]) {
-    const storage = createStorage([...priorMarker, [MODEL_STORAGE_KEY, previousDefault], ['mingrelian_source_lang', 'english']])
+  for (const priorMarker of [[], [[solMigrationKey, 'true']]]) {
+    const storage = createStorage([...priorMarker, [MODEL_STORAGE_KEY, solDefault], ['mingrelian_source_lang', 'english']])
     assert.equal(loadSelectedModel(storage), DEFAULT_MODEL)
     assert.equal(storage.getItem(MODEL_STORAGE_KEY), DEFAULT_MODEL)
     assert.equal(storage.getItem(MODEL_MIGRATION_KEY), 'true')
     assert.equal(storage.getItem('mingrelian_source_lang'), 'english')
-    assert.equal(storage.getItem(previousMigrationKey), priorMarker.length ? 'true' : null)
+    assert.equal(storage.getItem(solMigrationKey), priorMarker.length ? 'true' : null)
   }
 })
 
@@ -100,7 +104,7 @@ test('saved alternatives are preserved and opting back into older defaults stick
     assert.equal(storage.getItem(MODEL_MIGRATION_KEY), 'true')
   }
 
-  for (const model of [previousDefault, legacyDefault]) {
+  for (const model of [solDefault, previousDefault, legacyDefault]) {
     const storage = createStorage()
     loadSelectedModel(storage)
     storage.setItem(MODEL_STORAGE_KEY, model)
@@ -110,4 +114,11 @@ test('saved alternatives are preserved and opting back into older defaults stick
 
   const missingModel = createStorage([[MODEL_MIGRATION_KEY, 'true']])
   assert.equal(loadSelectedModel(missingModel), DEFAULT_MODEL)
+})
+
+test('GPT-6 Sol migrates when its successor was skipped, preserving a later explicit choice', () => {
+  const skipped = createStorage([[MODEL_STORAGE_KEY, previousDefault], [previousMigrationKey, 'true']])
+  assert.equal(loadSelectedModel(skipped), DEFAULT_MODEL)
+  const intentional = createStorage([[MODEL_STORAGE_KEY, previousDefault], [solMigrationKey, 'true']])
+  assert.equal(loadSelectedModel(intentional), previousDefault)
 })
