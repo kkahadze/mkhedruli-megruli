@@ -25,17 +25,17 @@ class LiveTranslationTests(unittest.TestCase):
         html = '<script src="https://third.test/_next/static/app/page-no.js"></script><script src="/_next/static/chunks/app/page-yes.js"></script>'
         expected = [smoke.SITE.rstrip("/") + "/_next/static/chunks/app/page-yes.js"]
         self.assertEqual(smoke.page_scripts(html), expected)
-        self.assertEqual(smoke.MARKER, "mingrelian_model_migration_gpt_6_1_sol_reasoning_low_v1")
-        self.assertFalse(smoke.website_model_installed(html, lambda _: "gpt-6.1-sol"))
+        self.assertEqual(smoke.MARKER, "mingrelian_model_migration_gpt_6_astra_ultrafast_reasoning_low_v1")
+        self.assertFalse(smoke.website_model_installed(html, lambda _: "gpt-6-astra"))
         self.assertFalse(smoke.website_model_installed(html, lambda _: "gpt-6-sol " + smoke.MARKER))
-        self.assertFalse(smoke.website_model_installed(html, lambda _: "gpt-6.1-sol mingrelian_model_migration_gpt_6_sol_reasoning_none_v1"))
-        self.assertTrue(smoke.website_model_installed(html, lambda _: "gpt-6.1-sol " + smoke.MARKER))
+        self.assertFalse(smoke.website_model_installed(html, lambda _: "gpt-6-astra mingrelian_model_migration_gpt_6_sol_reasoning_none_v1"))
+        self.assertTrue(smoke.website_model_installed(html, lambda _: "gpt-6-astra " + smoke.MARKER))
 
     def test_smoke_sends_new_public_model_with_supported_reasoning(self):
         html = '<script src="/_next/static/chunks/app/page-yes.js"></script>'
         response = event({"result": {"target_text": "\u10db\u10d0", "full_response": "Translation: synthetic"}})
         with patch.object(smoke, "get", side_effect=[html, f"{smoke.MODEL} {smoke.MARKER}", json.dumps({"paths": {"/chat": {}}})]), \
-                patch.object(smoke, "read", side_effect=[rejection("Reasoning 'none' is not supported for gpt-6.1-sol. Use 'low' or omit it."), response]) as read:
+                patch.object(smoke, "read", side_effect=[rejection("Reasoning 'none' is not supported for gpt-6-astra. Use 'low' or omit it."), response]) as read:
             smoke.smoke()
 
         self.assertEqual(read.call_count, 2)
@@ -52,7 +52,7 @@ class LiveTranslationTests(unittest.TestCase):
             "prompt": "Configuration readiness check.", "source_language": "english",
             "target_language": "english", "provider": "openai", "reasoning_effort": "none",
         })
-        self.assertEqual(json.loads(translation.data), {**probe, "model": "gpt-6.1-sol", "reasoning_effort": "low"})
+        self.assertEqual(json.loads(translation.data), {**probe, "model": "gpt-6-astra", "reasoning_effort": "low"})
 
     def test_wrong_default_stops_before_explicit_translation_without_retrying_or_printing_server_detail(self):
         html = '<script src="/_next/static/chunks/app/page-yes.js"></script>'
@@ -62,9 +62,9 @@ class LiveTranslationTests(unittest.TestCase):
             valid_result,
             rejection("Source and target languages must be different"),
             rejection("private upstream text: gpt-6-sol; use low"),
-            rejection("private upstream text: gpt-6.1-sol; use none"),
-            rejection("private upstream text: gpt-6.1-sol-preview; use low"),
-            rejection({"model": "gpt-6.1-sol", "suggestion": "use low", "secret": "private upstream text"}),
+            rejection("private upstream text: gpt-6-astra; use none"),
+            rejection("private upstream text: gpt-6-astra-preview; use low"),
+            rejection({"model": "gpt-6-astra", "suggestion": "use low", "secret": "private upstream text"}),
             invalid_json,
         ):
             with self.subTest(reply=reply), \
@@ -83,14 +83,14 @@ class LiveTranslationTests(unittest.TestCase):
                 self.assertNotIn("private upstream text", str(output.call_args_list))
 
     def test_unexpected_http_status_never_qualifies_and_can_retry_without_exposing_detail(self):
-        with patch.object(smoke, "read", side_effect=rejection("private upstream text: gpt-6.1-sol; use low", 503)):
+        with patch.object(smoke, "read", side_effect=rejection("private upstream text: gpt-6-astra; use low", 503)):
             with self.assertRaisesRegex(ValueError, "unexpected HTTP 503") as error:
                 smoke.verify_backend_default()
         self.assertNotIsInstance(error.exception, smoke.BackendDefaultMismatch)
         self.assertNotIn("private upstream text", str(error.exception))
 
     def test_backend_only_checks_the_live_default_without_touching_the_website_or_translating(self):
-        detail = "Model gpt-6.1-sol does not support reasoning effort 'none'; use 'low' or higher."
+        detail = "Model gpt-6-astra does not support reasoning effort 'none'; use 'low' or higher."
         with patch.object(smoke, "get", return_value=json.dumps({"paths": {"/chat": {}}})) as get, \
                 patch.object(smoke, "read", side_effect=rejection(detail)) as read, \
                 patch("builtins.print") as output:
@@ -102,7 +102,7 @@ class LiveTranslationTests(unittest.TestCase):
 
     def test_readiness_distinguishes_old_code_from_new_code_with_old_environment(self):
         wrong = "Source and target languages must be different"
-        expected = "Model gpt-6.1-sol does not support reasoning effort 'none'; use 'low' or higher."
+        expected = "Model gpt-6-astra does not support reasoning effort 'none'; use 'low' or higher."
         for explicit_detail, diagnostic in (
             (wrong, "has not yet exposed the new model validation"),
             (expected, "new backend validation is live, but the configured omitted-model default is still different"),
