@@ -58,10 +58,8 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL)
   const [openaiKey, setOpenaiKey] = useState('')
   const [anthropicKey, setAnthropicKey] = useState('')
-  const [geminiKey, setGeminiKey] = useState('')
   const [rememberOpenai, setRememberOpenai] = useState(false)
   const [rememberAnthropic, setRememberAnthropic] = useState(false)
-  const [rememberGemini, setRememberGemini] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const activeRequestRef = useRef<AbortController | null>(null)
@@ -112,12 +110,10 @@ export default function Home() {
     const loadPreferences = async () => {
       const savedOpenaiKey = localStorage.getItem('mingrelian_openai_key')
       const savedAnthropicKey = localStorage.getItem('mingrelian_anthropic_key')
-      const savedGeminiKey = localStorage.getItem('mingrelian_gemini_key')
       const savedSourceLang = localStorage.getItem('mingrelian_source_lang')
       const savedTargetLang = localStorage.getItem('mingrelian_target_lang')
       const rememberOpenai = localStorage.getItem('mingrelian_remember_openai_key') === 'true'
       const rememberAnthropic = localStorage.getItem('mingrelian_remember_anthropic_key') === 'true'
-      const rememberGemini = localStorage.getItem('mingrelian_remember_gemini_key') === 'true'
 
       if (savedOpenaiKey && rememberOpenai) {
         setOpenaiKey(savedOpenaiKey)
@@ -126,10 +122,6 @@ export default function Home() {
       if (savedAnthropicKey && rememberAnthropic) {
         setAnthropicKey(savedAnthropicKey)
         setRememberAnthropic(true)
-      }
-      if (savedGeminiKey && rememberGemini) {
-        setGeminiKey(savedGeminiKey)
-        setRememberGemini(true)
       }
       setSelectedModel(loadSelectedModel(localStorage))
 
@@ -200,23 +192,12 @@ export default function Home() {
     }
   }, [preferencesReady, rememberAnthropic, anthropicKey])
 
-  useEffect(() => {
-    if (!preferencesReady) return
-    localStorage.setItem('mingrelian_remember_gemini_key', rememberGemini.toString())
-    if (rememberGemini && geminiKey) {
-      localStorage.setItem('mingrelian_gemini_key', geminiKey)
-    } else {
-      localStorage.removeItem('mingrelian_gemini_key')
-    }
-  }, [preferencesReady, rememberGemini, geminiKey])
-
   const getProvider = () => {
     return models.find(m => m.value === selectedModel)?.provider || 'openai'
   }
 
   const getApiKeyForProvider = (provider: string) => {
     if (provider === 'anthropic') return anthropicKey
-    if (provider === 'gemini') return geminiKey
     return openaiKey
   }
 
@@ -268,7 +249,7 @@ export default function Home() {
     console.log('🚀 Starting translation...', { provider, model: selectedModel, sourceLanguage, targetLanguage })
 
     if (SHOW_SETTINGS && !selectedModelSupportsServerKey() && !userApiKey) {
-      const providerName = provider === 'anthropic' ? 'Anthropic' : provider === 'gemini' ? 'Gemini' : 'OpenAI'
+      const providerName = provider === 'anthropic' ? 'Anthropic' : 'OpenAI'
       setError(`${t('noApiKey')} ${providerName} ${t('apiKey')}`)
       return
     }
@@ -478,10 +459,8 @@ export default function Home() {
 
     setOpenaiKey('')
     setAnthropicKey('')
-    setGeminiKey('')
     setRememberOpenai(false)
     setRememberAnthropic(false)
-    setRememberGemini(false)
     setSelectedModel(DEFAULT_MODEL)
     setInputText('')
     setError('')
@@ -508,14 +487,10 @@ export default function Home() {
           setOpenaiKey={setOpenaiKey}
           anthropicKey={anthropicKey}
           setAnthropicKey={setAnthropicKey}
-          geminiKey={geminiKey}
-          setGeminiKey={setGeminiKey}
           rememberOpenai={rememberOpenai}
           setRememberOpenai={setRememberOpenai}
           rememberAnthropic={rememberAnthropic}
           setRememberAnthropic={setRememberAnthropic}
-          rememberGemini={rememberGemini}
-          setRememberGemini={setRememberGemini}
           selectedModel={selectedModel}
           setSelectedModel={setSelectedModel}
           models={models}
