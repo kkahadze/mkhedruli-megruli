@@ -14,11 +14,7 @@ const solDefault = 'gpt-6.1-sol'
 const solMigrationKey = 'mingrelian_model_migration_gpt_6_1_sol_reasoning_low_v1'
 const previousDefault = 'gpt-6-sol'
 const previousMigrationKey = 'mingrelian_model_migration_gpt_6_sol_reasoning_none_v1'
-const legacyDefault = 'gpt-5.6-sol'
-const legacyMigrationKey = 'mingrelian_model_migration_gpt_5_6_sol_reasoning_none_v1'
 const otherModelIds = [
-  'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4',
-  'gpt-5-2025-08-07', 'gpt-5-pro-2025-10-06', 'gpt-5.2',
   'claude-sonnet-4-5-20250929',
 ]
 
@@ -40,14 +36,13 @@ test('GPT-6 Astra is the first selectable model and the supported alternatives r
   assert.deepEqual(models[0], { value: DEFAULT_MODEL, label: 'GPT-6 Astra (Ultrafast, Reasoning Low)', provider: 'openai' })
   assert.deepEqual(models[1], { value: solDefault, label: 'GPT-6.1 Sol (Reasoning Low)', provider: 'openai' })
   assert.deepEqual(models[2], { value: previousDefault, label: 'GPT-6 Sol (Reasoning None)', provider: 'openai' })
-  assert.deepEqual(models[3], { value: legacyDefault, label: 'GPT-5.6 Sol (Reasoning None)', provider: 'openai' })
-  assert.deepEqual(models.slice(4).map(({ value }) => value), otherModelIds)
+  assert.deepEqual(models.slice(3).map(({ value }) => value), otherModelIds)
   assert.equal(new Set(models.map(({ value }) => value)).size, models.length)
 })
 
 test('supported OpenAI models remain server-key eligible', () => {
   assert.deepEqual([...SERVER_KEY_MODELS], [
-    DEFAULT_MODEL, solDefault, previousDefault, legacyDefault, 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4-nano',
+    DEFAULT_MODEL, solDefault, previousDefault,
   ])
 })
 
@@ -55,7 +50,6 @@ test('GPT-6 Astra explicitly requests low reasoning while all previous overrides
   assert.equal(getReasoningEffortForModel(DEFAULT_MODEL), 'low')
   assert.equal(getReasoningEffortForModel(solDefault), 'low')
   assert.equal(getReasoningEffortForModel(previousDefault), 'none')
-  assert.equal(getReasoningEffortForModel(legacyDefault), 'none')
   for (const model of [...otherModelIds, 'unknown-model']) assert.equal(getReasoningEffortForModel(model), undefined)
 })
 
@@ -80,22 +74,6 @@ test('the previous default migrates regardless of the old marker, without touchi
   }
 })
 
-test('the legacy default follows a skipped migration but an intentional choice made after it is preserved', () => {
-  for (const olderMarker of [[], [[legacyMigrationKey, 'true']]]) {
-    const storage = createStorage([...olderMarker, [MODEL_STORAGE_KEY, legacyDefault]])
-    assert.equal(loadSelectedModel(storage), DEFAULT_MODEL)
-    assert.equal(storage.getItem(MODEL_STORAGE_KEY), DEFAULT_MODEL)
-    assert.equal(storage.getItem(MODEL_MIGRATION_KEY), 'true')
-    assert.equal(storage.getItem(legacyMigrationKey), olderMarker.length ? 'true' : null)
-    assert.equal(storage.getItem(previousMigrationKey), null)
-  }
-
-  const intentionalChoice = createStorage([[MODEL_STORAGE_KEY, legacyDefault], [previousMigrationKey, 'true']])
-  assert.equal(loadSelectedModel(intentionalChoice), legacyDefault)
-  assert.equal(intentionalChoice.getItem(MODEL_STORAGE_KEY), legacyDefault)
-  assert.equal(intentionalChoice.getItem(MODEL_MIGRATION_KEY), 'true')
-})
-
 test('saved alternatives are preserved and opting back into older defaults sticks after migration', () => {
   for (const model of [DEFAULT_MODEL, ...otherModelIds]) {
     const storage = createStorage([[MODEL_STORAGE_KEY, model]])
@@ -104,7 +82,7 @@ test('saved alternatives are preserved and opting back into older defaults stick
     assert.equal(storage.getItem(MODEL_MIGRATION_KEY), 'true')
   }
 
-  for (const model of [solDefault, previousDefault, legacyDefault]) {
+  for (const model of [solDefault, previousDefault]) {
     const storage = createStorage()
     loadSelectedModel(storage)
     storage.setItem(MODEL_STORAGE_KEY, model)
@@ -124,8 +102,12 @@ test('GPT-6 Sol migrates when its successor was skipped, preserving a later expl
 })
 
 
-test('removed Google selections fall back before or after the default migration', () => {
-  for (const removed of ['gemini-3-flash-preview', 'gemini-3.1-flash-lite-preview', 'unknown-model']) {
+test('removed and unknown selections fall back before or after the default migration', () => {
+  for (const removed of [
+    'gpt-5.6-sol', 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4-nano', 'gpt-5.4-mini',
+    'gpt-5.4', 'gpt-5-2025-08-07', 'gpt-5-pro-2025-10-06', 'gpt-5.2',
+    'gemini-3-flash-preview', 'gemini-3.1-flash-lite-preview', 'unknown-model',
+  ]) {
     for (const marker of [[], [[MODEL_MIGRATION_KEY, 'true']]]) {
       const storage = createStorage([...marker, [MODEL_STORAGE_KEY, removed], ['mingrelian_source_lang', 'english']])
       assert.equal(loadSelectedModel(storage), DEFAULT_MODEL)
