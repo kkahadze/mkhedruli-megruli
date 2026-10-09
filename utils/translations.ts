@@ -37,8 +37,6 @@ export const translations = {
     openaiPlaceholder: 'sk-...',
     anthropicApiKey: 'Anthropic API Key',
     anthropicPlaceholder: 'sk-ant-...',
-    geminiApiKey: 'Gemini API Key',
-    geminiPlaceholder: 'AI...',
     rememberKey: 'Remember this key in browser',
     getKeyAt: 'Get your key at',
     
@@ -132,8 +130,6 @@ export const translations = {
     openaiPlaceholder: 'sk-...',
     anthropicApiKey: 'Anthropic API გასაღები',
     anthropicPlaceholder: 'sk-ant-...',
-    geminiApiKey: 'Gemini API გასაღები',
-    geminiPlaceholder: 'AI...',
     rememberKey: 'დამახსოვრება ბრაუზერში',
     getKeyAt: 'მიიღეთ გასაღები',
     

@@ -9,14 +9,10 @@ interface SettingsModalProps {
   setOpenaiKey: (key: string) => void
   anthropicKey: string
   setAnthropicKey: (key: string) => void
-  geminiKey: string
-  setGeminiKey: (key: string) => void
   rememberOpenai: boolean
   setRememberOpenai: (remember: boolean) => void
   rememberAnthropic: boolean
   setRememberAnthropic: (remember: boolean) => void
-  rememberGemini: boolean
-  setRememberGemini: (remember: boolean) => void
   selectedModel: string
   setSelectedModel: (model: string) => void
   models: Array<{ value: string; label: string; provider: string }>
@@ -30,14 +26,10 @@ export default function SettingsModal({
   setOpenaiKey,
   anthropicKey,
   setAnthropicKey,
-  geminiKey,
-  setGeminiKey,
   rememberOpenai,
   setRememberOpenai,
   rememberAnthropic,
   setRememberAnthropic,
-  rememberGemini,
-  setRememberGemini,
   selectedModel,
   setSelectedModel,
   models,
@@ -139,31 +131,6 @@ export default function SettingsModal({
                   </p>
                 </div>
 
-                {/* Gemini Key */}
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
-                    {t('geminiApiKey')}
-                  </label>
-                  <input
-                    type="password"
-                    value={geminiKey}
-                    onChange={(e) => setGeminiKey(e.target.value)}
-                    placeholder={t('geminiPlaceholder')}
-                    className="h-10 w-full rounded-md border border-[color:var(--border)] bg-white px-3 text-sm outline-none transition-colors focus:border-[var(--accent)]"
-                  />
-                  <label className="mt-3 flex items-center text-sm text-[var(--muted)]">
-                    <input
-                      type="checkbox"
-                      checked={rememberGemini}
-                      onChange={(e) => setRememberGemini(e.target.checked)}
-                      className="mr-2 h-4 w-4 rounded border-[color:var(--border)] accent-[var(--accent)]"
-                    />
-                    {t('rememberKey')}
-                  </label>
-                  <p className="mt-2 text-xs text-[var(--muted)]">
-                    {t('getKeyAt')} <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">aistudio.google.com</a>
-                  </p>
-                </div>
               </div>
             </div>
 
@@ -185,8 +152,7 @@ export default function SettingsModal({
                     <option key={model.value} value={model.value}>
                       {model.label} ({
                         model.provider === 'openai' ? 'OpenAI' : 
-                        model.provider === 'anthropic' ? 'Anthropic' : 
-                        'Gemini'
+                        'Anthropic'
                       })
                     </option>
                   ))}

@@ -19,7 +19,7 @@ const legacyMigrationKey = 'mingrelian_model_migration_gpt_5_6_sol_reasoning_non
 const otherModelIds = [
   'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4',
   'gpt-5-2025-08-07', 'gpt-5-pro-2025-10-06', 'gpt-5.2',
-  'claude-sonnet-4-5-20250929', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite-preview',
+  'claude-sonnet-4-5-20250929',
 ]
 
 function createStorage(entries = []) {
@@ -35,7 +35,7 @@ function createStorage(entries = []) {
   }
 }
 
-test('GPT-6 Astra is the first selectable model and the previous choices remain', () => {
+test('GPT-6 Astra is the first selectable model and the supported alternatives remain', () => {
   assert.equal(DEFAULT_MODEL, 'gpt-6-astra')
   assert.deepEqual(models[0], { value: DEFAULT_MODEL, label: 'GPT-6 Astra (Ultrafast, Reasoning Low)', provider: 'openai' })
   assert.deepEqual(models[1], { value: solDefault, label: 'GPT-6.1 Sol (Reasoning Low)', provider: 'openai' })
@@ -45,9 +45,9 @@ test('GPT-6 Astra is the first selectable model and the previous choices remain'
   assert.equal(new Set(models.map(({ value }) => value)).size, models.length)
 })
 
-test('the new model is server-key eligible and no previous eligibility changes', () => {
+test('supported OpenAI models remain server-key eligible', () => {
   assert.deepEqual([...SERVER_KEY_MODELS], [
-    DEFAULT_MODEL, solDefault, previousDefault, legacyDefault, 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4-nano', 'gemini-3.1-flash-lite-preview',
+    DEFAULT_MODEL, solDefault, previousDefault, legacyDefault, 'gpt-5.6-luna', 'gpt-5.5', 'gpt-5.4-nano',
   ])
 })
 
@@ -121,4 +121,19 @@ test('GPT-6 Sol migrates when its successor was skipped, preserving a later expl
   assert.equal(loadSelectedModel(skipped), DEFAULT_MODEL)
   const intentional = createStorage([[MODEL_STORAGE_KEY, previousDefault], [solMigrationKey, 'true']])
   assert.equal(loadSelectedModel(intentional), previousDefault)
+})
+
+
+test('removed Google selections fall back before or after the default migration', () => {
+  for (const removed of ['gemini-3-flash-preview', 'gemini-3.1-flash-lite-preview', 'unknown-model']) {
+    for (const marker of [[], [[MODEL_MIGRATION_KEY, 'true']]]) {
+      const storage = createStorage([...marker, [MODEL_STORAGE_KEY, removed], ['mingrelian_source_lang', 'english']])
+      assert.equal(loadSelectedModel(storage), DEFAULT_MODEL)
+      assert.equal(storage.getItem(MODEL_STORAGE_KEY), DEFAULT_MODEL)
+      assert.equal(storage.getItem('mingrelian_source_lang'), 'english')
+      const writes = storage.writes.length
+      assert.equal(loadSelectedModel(storage), DEFAULT_MODEL)
+      assert.equal(storage.writes.length, writes)
+    }
+  }
 })
