@@ -5,7 +5,7 @@ A modern Next.js application for translating Mingrelian text to Georgian and Eng
 ## Features
 
 - 🌐 Translate Mingrelian to English or Georgian
-- 🤖 Support for multiple AI models, including GPT-6 Astra, GPT-6.1 Sol, GPT-6 Sol, GPT-5.6 Luna, GPT-5.5, and Claude Sonnet 4.5
+- 🤖 Support for multiple AI models, including GPT-6 Astra, GPT-6.1 Sol, GPT-6 Sol, and Claude Sonnet 4.5
 - 💾 Save API keys locally in browser
 - 🎨 Clean, minimalist UI with two-column layout
 - 📱 Responsive design
@@ -46,7 +46,7 @@ npm start
 ## Usage
 
 1. **Enter API Keys (Optional)**: Add your OpenAI or Anthropic API keys if you want to override the server-side defaults
-2. **Select Model**: Choose between GPT-6 Astra (default), GPT-6.1 Sol, GPT-6 Sol, GPT-5 variants, or Claude Sonnet 4.5
+2. **Select Model**: Choose between GPT-6 Astra (default), GPT-6.1 Sol, GPT-6 Sol, or Claude Sonnet 4.5
 3. **Input Text**: Enter Mingrelian text in the left panel (latinized or mkhedruli script)
 4. **Choose Target**: Select English or Georgian as target language
 5. **Translate**: Click the translate button
