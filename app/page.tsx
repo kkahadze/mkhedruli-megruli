@@ -26,6 +26,12 @@ const VISITOR_ID_STORAGE_KEY = 'mingrelian_visitor_id'
 const VISITOR_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
 const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
 const AUTO_TRANSLATE_DELAY_MS = 1000
+const LEGACY_API_KEY_STORAGE_KEYS = [
+  'mingrelian_openai_key',
+  'mingrelian_anthropic_key',
+  'mingrelian_remember_openai_key',
+  'mingrelian_remember_anthropic_key',
+] as const
 
 const createAnonymousVisitorId = () => {
   if (window.crypto?.randomUUID) {
@@ -58,8 +64,6 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL)
   const [openaiKey, setOpenaiKey] = useState('')
   const [anthropicKey, setAnthropicKey] = useState('')
-  const [rememberOpenai, setRememberOpenai] = useState(false)
-  const [rememberAnthropic, setRememberAnthropic] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const activeRequestRef = useRef<AbortController | null>(null)
@@ -108,21 +112,14 @@ export default function Home() {
     let cancelled = false
 
     const loadPreferences = async () => {
-      const savedOpenaiKey = localStorage.getItem('mingrelian_openai_key')
-      const savedAnthropicKey = localStorage.getItem('mingrelian_anthropic_key')
+      // API keys are sensitive. Remove values saved by older versions and keep
+      // newly entered keys in component memory only.
+      for (const key of LEGACY_API_KEY_STORAGE_KEYS) {
+        localStorage.removeItem(key)
+      }
+
       const savedSourceLang = localStorage.getItem('mingrelian_source_lang')
       const savedTargetLang = localStorage.getItem('mingrelian_target_lang')
-      const rememberOpenai = localStorage.getItem('mingrelian_remember_openai_key') === 'true'
-      const rememberAnthropic = localStorage.getItem('mingrelian_remember_anthropic_key') === 'true'
-
-      if (savedOpenaiKey && rememberOpenai) {
-        setOpenaiKey(savedOpenaiKey)
-        setRememberOpenai(true)
-      }
-      if (savedAnthropicKey && rememberAnthropic) {
-        setAnthropicKey(savedAnthropicKey)
-        setRememberAnthropic(true)
-      }
       setSelectedModel(loadSelectedModel(localStorage))
 
       let nextSourceLanguage = DEFAULT_SITE_DEFAULTS.sourceLanguage
@@ -172,26 +169,6 @@ export default function Home() {
     localStorage.setItem('mingrelian_target_lang', targetLanguage)
   }, [preferencesReady, targetLanguage])
 
-  useEffect(() => {
-    if (!preferencesReady) return
-    localStorage.setItem('mingrelian_remember_openai_key', rememberOpenai.toString())
-    if (rememberOpenai && openaiKey) {
-      localStorage.setItem('mingrelian_openai_key', openaiKey)
-    } else {
-      localStorage.removeItem('mingrelian_openai_key')
-    }
-  }, [preferencesReady, rememberOpenai, openaiKey])
-
-  useEffect(() => {
-    if (!preferencesReady) return
-    localStorage.setItem('mingrelian_remember_anthropic_key', rememberAnthropic.toString())
-    if (rememberAnthropic && anthropicKey) {
-      localStorage.setItem('mingrelian_anthropic_key', anthropicKey)
-    } else {
-      localStorage.removeItem('mingrelian_anthropic_key')
-    }
-  }, [preferencesReady, rememberAnthropic, anthropicKey])
-
   const getProvider = () => {
     return models.find(m => m.value === selectedModel)?.provider || 'openai'
   }
@@ -237,7 +214,6 @@ export default function Home() {
     activeRequestRef.current?.abort()
     activeRequestRef.current = null
     const requestId = ++requestIdRef.current
-    const startTime = performance.now()
     const provider = getProvider()
     const userApiKey = getApiKeyForProvider(provider)
     
@@ -245,8 +221,6 @@ export default function Home() {
     const apiKey = SHOW_SETTINGS 
       ? userApiKey
       : ''
-
-    console.log('🚀 Starting translation...', { provider, model: selectedModel, sourceLanguage, targetLanguage })
 
     if (SHOW_SETTINGS && !selectedModelSupportsServerKey() && !userApiKey) {
       const providerName = provider === 'anthropic' ? 'Anthropic' : 'OpenAI'
@@ -291,16 +265,12 @@ export default function Home() {
       ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {})
     }
 
-    console.log('Request body:', { ...requestBody, api_key: '***', visitor_id: '***' })
-
     const timeoutId = setTimeout(() => {
       controller.abort()
       console.error('Request timed out after 1 minute')
     }, 60000) // 1 minute timeout
 
     try {
-      console.log('Sending request to API...')
-
       // Switch between local and production
       const apiUrl = 'https://argo-translator.onrender.com'
       
@@ -312,11 +282,8 @@ export default function Home() {
       })
 
       clearTimeout(timeoutId)
-      console.log('Response received:', response.status, response.statusText)
-
       if (!response.ok) {
         const errorData = await response.json()
-        console.error('API error:', errorData)
         setError(`${t('apiError')}: ${errorData.detail || response.statusText}`)
         setLoading(false)
         return
@@ -354,7 +321,6 @@ export default function Home() {
               
               if (event.result) {
                 // Final result received
-                console.log('Translation successful:', event.result)
                 finalResult = event.result
               } else if (event.error) {
                 console.error('API error:', event.error)
@@ -370,10 +336,6 @@ export default function Home() {
       }
 
       if (finalResult) {
-        const endTime = performance.now()
-        const duration = ((endTime - startTime) / 1000).toFixed(2)
-        console.log(`✅ Translation completed in ${duration}s`)
-        console.log(`⏱️  Total time: ${duration} seconds (${Math.round(endTime - startTime)}ms)`)
         if (requestId === requestIdRef.current) {
           setResult(finalResult)
         }
@@ -385,9 +347,6 @@ export default function Home() {
     } catch (err: any) {
       if (requestId !== requestIdRef.current) return
 
-      const endTime = performance.now()
-      const duration = ((endTime - startTime) / 1000).toFixed(2)
-      console.error(`❌ Translation failed after ${duration}s:`, err)
       if (err.name === 'AbortError') {
         setError(t('timeout'))
       } else {
@@ -459,8 +418,6 @@ export default function Home() {
 
     setOpenaiKey('')
     setAnthropicKey('')
-    setRememberOpenai(false)
-    setRememberAnthropic(false)
     setSelectedModel(DEFAULT_MODEL)
     setInputText('')
     setError('')
@@ -487,10 +444,6 @@ export default function Home() {
           setOpenaiKey={setOpenaiKey}
           anthropicKey={anthropicKey}
           setAnthropicKey={setAnthropicKey}
-          rememberOpenai={rememberOpenai}
-          setRememberOpenai={setRememberOpenai}
-          rememberAnthropic={rememberAnthropic}
-          setRememberAnthropic={setRememberAnthropic}
           selectedModel={selectedModel}
           setSelectedModel={setSelectedModel}
           models={models}

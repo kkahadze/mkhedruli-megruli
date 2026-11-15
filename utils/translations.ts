@@ -38,6 +38,7 @@ export const translations = {
     anthropicApiKey: 'Anthropic API Key',
     anthropicPlaceholder: 'sk-ant-...',
     rememberKey: 'Remember this key in browser',
+    keySessionOnly: 'For your security, this key is kept only until you refresh or close this tab.',
     getKeyAt: 'Get your key at',
     
     // Settings Modal - Model
@@ -131,6 +132,7 @@ export const translations = {
     anthropicApiKey: 'Anthropic API გასაღები',
     anthropicPlaceholder: 'sk-ant-...',
     rememberKey: 'დამახსოვრება ბრაუზერში',
+    keySessionOnly: 'უსაფრთხოებისთვის, ეს გასაღები ინახება მხოლოდ ჩანართის დახურვამდე ან განახლებამდე.',
     getKeyAt: 'მიიღეთ გასაღები',
     
     // Settings Modal - Model
