@@ -14,6 +14,18 @@ const SITE_LOGO = `${SITE_URL}/mkhedruli-logo.png`
 const SITE_SOCIAL_IMAGE = `${SITE_URL}/social-preview.png`
 const SITE_SOCIAL_IMAGE_ALT =
   'Mkhedruli Mingrelian Translator translating between English, Georgian, and Mingrelian'
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+  "connect-src 'self' https://argo-translator.onrender.com https://www.google-analytics.com https://analytics.google.com",
+  "img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
+  'upgrade-insecure-requests',
+].join('; ')
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -71,6 +83,7 @@ export const metadata: Metadata = {
     'Mingrelian to Georgian',
   ],
   metadataBase: new URL(SITE_URL),
+  referrer: 'strict-origin-when-cross-origin',
   alternates: {
     canonical: '/',
   },
@@ -122,6 +135,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <meta httpEquiv="Content-Security-Policy" content={CONTENT_SECURITY_POLICY} />
+      </head>
       <body className={inter.className}>
         <script
           type="application/ld+json"

@@ -9,10 +9,6 @@ interface SettingsModalProps {
   setOpenaiKey: (key: string) => void
   anthropicKey: string
   setAnthropicKey: (key: string) => void
-  rememberOpenai: boolean
-  setRememberOpenai: (remember: boolean) => void
-  rememberAnthropic: boolean
-  setRememberAnthropic: (remember: boolean) => void
   selectedModel: string
   setSelectedModel: (model: string) => void
   models: Array<{ value: string; label: string; provider: string }>
@@ -26,10 +22,6 @@ export default function SettingsModal({
   setOpenaiKey,
   anthropicKey,
   setAnthropicKey,
-  rememberOpenai,
-  setRememberOpenai,
-  rememberAnthropic,
-  setRememberAnthropic,
   selectedModel,
   setSelectedModel,
   models,
@@ -89,17 +81,13 @@ export default function SettingsModal({
                     value={openaiKey}
                     onChange={(e) => setOpenaiKey(e.target.value)}
                     placeholder={t('openaiPlaceholder')}
+                    autoComplete="new-password"
+                    spellCheck={false}
                     className="h-10 w-full rounded-md border border-[color:var(--border)] bg-white px-3 text-sm outline-none transition-colors focus:border-[var(--accent)]"
                   />
-                  <label className="mt-3 flex items-center text-sm text-[var(--muted)]">
-                    <input
-                      type="checkbox"
-                      checked={rememberOpenai}
-                      onChange={(e) => setRememberOpenai(e.target.checked)}
-                      className="mr-2 h-4 w-4 rounded border-[color:var(--border)] accent-[var(--accent)]"
-                    />
-                    {t('rememberKey')}
-                  </label>
+                  <p className="mt-3 text-xs text-[var(--muted)]">
+                    {t('keySessionOnly')}
+                  </p>
                   <p className="mt-2 text-xs text-[var(--muted)]">
                     {t('getKeyAt')} <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">platform.openai.com</a>
                   </p>
@@ -115,17 +103,13 @@ export default function SettingsModal({
                     value={anthropicKey}
                     onChange={(e) => setAnthropicKey(e.target.value)}
                     placeholder={t('anthropicPlaceholder')}
+                    autoComplete="new-password"
+                    spellCheck={false}
                     className="h-10 w-full rounded-md border border-[color:var(--border)] bg-white px-3 text-sm outline-none transition-colors focus:border-[var(--accent)]"
                   />
-                  <label className="mt-3 flex items-center text-sm text-[var(--muted)]">
-                    <input
-                      type="checkbox"
-                      checked={rememberAnthropic}
-                      onChange={(e) => setRememberAnthropic(e.target.checked)}
-                      className="mr-2 h-4 w-4 rounded border-[color:var(--border)] accent-[var(--accent)]"
-                    />
-                    {t('rememberKey')}
-                  </label>
+                  <p className="mt-3 text-xs text-[var(--muted)]">
+                    {t('keySessionOnly')}
+                  </p>
                   <p className="mt-2 text-xs text-[var(--muted)]">
                     {t('getKeyAt')} <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] hover:underline">console.anthropic.com</a>
                   </p>
