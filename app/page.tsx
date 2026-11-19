@@ -542,6 +542,9 @@ export default function Home() {
       <div className="grid gap-4 md:grid-cols-2 md:gap-5">
         {/* Input Section */}
         <div className="space-y-3">
+          <p id="translation-storage-notice" className="text-sm leading-6 text-[var(--muted)]">
+            {t('translationStorageNotice')}
+          </p>
 
           <div className="flex min-h-[292px] flex-col rounded-lg border border-[color:var(--border)] bg-[var(--surface)]">
             <div className="relative flex-1 px-5 pt-5">
@@ -551,6 +554,7 @@ export default function Home() {
                 onKeyDown={handleInputKeyDown}
                 placeholder={t('sourceTextPlaceholder')}
                 aria-label={t('sourceText')}
+                aria-describedby="translation-storage-notice"
                 className="h-[212px] w-full resize-none border-0 bg-transparent p-0 text-base leading-7 text-[var(--foreground)] outline-none placeholder:text-[#959c98]"
               />
               {inputTransliteration && (
