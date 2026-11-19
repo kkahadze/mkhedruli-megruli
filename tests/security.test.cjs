@@ -33,3 +33,17 @@ test('translation payloads are not written to the browser console', () => {
   assert.doesNotMatch(page, /Translation successful:/)
   assert.doesNotMatch(page, /Request body:/)
 })
+
+test('translation storage is disclosed visibly before the input in both UI languages', () => {
+  const page = read('app/page.tsx')
+  const translations = read('utils/translations.ts')
+
+  assert.match(
+    page,
+    /<p id="translation-storage-notice" className="text-sm leading-6 text-\[var\(--muted\)\]">\s*\{t\('translationStorageNotice'\)\}\s*<\/p>/
+  )
+  assert.ok(page.indexOf('id="translation-storage-notice"') < page.indexOf('<textarea'))
+  assert.match(page, /aria-describedby="translation-storage-notice"/)
+  assert.match(translations, /translationStorageNotice: 'The text you enter and its translation are saved to improve the translator\. Do not enter sensitive information\.'/)
+  assert.match(translations, /translationStorageNotice: 'თქვენ მიერ შეყვანილი ტექსტი და მისი თარგმანი ინახება მთარგმნელის გასაუმჯობესებლად\. არ შეიყვანოთ სენსიტიური ინფორმაცია\.'/)
+})
