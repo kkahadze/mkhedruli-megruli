@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { translatorUrls } from '@/utils/translatorUrls'
 import Navbar from '@/components/Navbar'
 import { useLanguage } from '@/contexts/LanguageContext'
 import type { TranslationKey } from '@/utils/translations'
@@ -11,6 +12,12 @@ const UPDATE_GROUPS: {
   label: TranslationKey
   updates: TranslationKey[]
 }[] = [
+  {
+    id: 'november-2026',
+    date: '2026-11',
+    label: 'updatesNovember2026',
+    updates: ['updatesGeorgianPage'],
+  },
   {
     id: 'august-2026',
     date: '2026-08',
@@ -37,14 +44,14 @@ const UPDATE_GROUPS: {
 ]
 
 export default function UpdatesPage() {
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
 
   return (
     <>
       <Navbar hasApiKey showSettings={false} />
       <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
         <Link
-          href="/"
+          href={translatorUrls[language]}
           className="inline-flex items-center gap-2 text-sm font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-hover)]"
         >
           <span aria-hidden="true">&larr;</span>

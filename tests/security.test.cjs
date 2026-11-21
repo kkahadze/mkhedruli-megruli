@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, '..')
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8')
 
 test('API keys are never persisted in browser storage', () => {
-  const page = read('app/page.tsx')
+  const page = read('app/(translator)/layout.tsx')
   const settings = read('components/SettingsModal.tsx')
 
   assert.doesNotMatch(
@@ -28,7 +28,7 @@ test('the static frontend declares a restrictive content security policy', () =>
 })
 
 test('translation payloads are not written to the browser console', () => {
-  const page = read('app/page.tsx')
+  const page = read('app/(translator)/layout.tsx')
 
   assert.doesNotMatch(page, /Translation successful:/)
   assert.doesNotMatch(page, /Request body:/)

@@ -1,13 +1,11 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, type KeyboardEvent } from 'react'
+import { useState, useEffect, useMemo, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { mkhedruliToLatinized, latinizedToMkhedruli, isGeorgianScript } from '@/utils/transliterate'
 import Navbar from '@/components/Navbar'
 import SettingsModal from '@/components/SettingsModal'
 import { useLanguage } from '@/contexts/LanguageContext'
 import {
-  detectSiteDefaults,
-  getDefaultSiteDefaults,
   isTranslationLanguage,
   type TranslationLanguage,
 } from '@/utils/siteDefaults'
@@ -24,7 +22,7 @@ import {
 const SHOW_SETTINGS = true
 const VISITOR_ID_STORAGE_KEY = 'mingrelian_visitor_id'
 const VISITOR_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
-const DEFAULT_SITE_DEFAULTS = getDefaultSiteDefaults()
+const GEORGIAN_EXAMPLES = ['გამარჯობა!', 'როგორ ხარ?', 'დიდი მადლობა!']
 const AUTO_TRANSLATE_DELAY_MS = 1000
 const LEGACY_API_KEY_STORAGE_KEYS = [
   'mingrelian_openai_key',
@@ -56,11 +54,13 @@ const getAnonymousVisitorId = () => {
   }
 }
 
-export default function Home() {
-  const { language, setLanguage, t } = useLanguage()
+export default function TranslatorLayout({ children }: { children: ReactNode }) {
+  const { language, t } = useLanguage()
   const [inputText, setInputText] = useState('')
-  const [sourceLanguage, setSourceLanguage] = useState<TranslationLanguage>(DEFAULT_SITE_DEFAULTS.sourceLanguage)
-  const [targetLanguage, setTargetLanguage] = useState<TranslationLanguage>(DEFAULT_SITE_DEFAULTS.targetLanguage)
+  const [sourceChoice, setSourceLanguage] = useState<TranslationLanguage | null>(null)
+  const [targetChoice, setTargetLanguage] = useState<TranslationLanguage | null>(null)
+  const sourceLanguage = sourceChoice ?? (language === 'ka' ? 'georgian' : 'english')
+  const targetLanguage = targetChoice ?? 'mingrelian'
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL)
   const [openaiKey, setOpenaiKey] = useState('')
   const [anthropicKey, setAnthropicKey] = useState('')
@@ -91,66 +91,32 @@ export default function Home() {
   )
 
   const setSourceLanguageSafe = (next: TranslationLanguage) => {
-    if (next === targetLanguage) {
-      // Pick the first different language as the new target to avoid source==target
-      const fallback = (['mingrelian', 'georgian', 'english'] as const).find(l => l !== next)
-      if (fallback) setTargetLanguage(fallback)
-    }
+    const target = next === targetLanguage ? (next === 'mingrelian' ? 'georgian' : 'mingrelian') : targetLanguage
     setSourceLanguage(next)
+    setTargetLanguage(target)
   }
 
   const setTargetLanguageSafe = (next: TranslationLanguage) => {
-    if (next === sourceLanguage) {
-      const fallback = (['mingrelian', 'georgian', 'english'] as const).find(l => l !== next)
-      if (fallback) setSourceLanguage(fallback)
-    }
+    const source = next === sourceLanguage ? (next === 'mingrelian' ? 'georgian' : 'mingrelian') : sourceLanguage
+    setSourceLanguage(source)
     setTargetLanguage(next)
   }
 
   // Load saved preferences
   useEffect(() => {
-    let cancelled = false
-
-    const loadPreferences = async () => {
-      // API keys are sensitive. Remove values saved by older versions and keep
-      // newly entered keys in component memory only.
-      for (const key of LEGACY_API_KEY_STORAGE_KEYS) {
-        localStorage.removeItem(key)
-      }
-
-      const savedSourceLang = localStorage.getItem('mingrelian_source_lang')
-      const savedTargetLang = localStorage.getItem('mingrelian_target_lang')
-      setSelectedModel(loadSelectedModel(localStorage))
-
-      let nextSourceLanguage = DEFAULT_SITE_DEFAULTS.sourceLanguage
-      let nextTargetLanguage = DEFAULT_SITE_DEFAULTS.targetLanguage
-
-      if (
-        isTranslationLanguage(savedSourceLang) &&
-        isTranslationLanguage(savedTargetLang) &&
-        savedSourceLang !== savedTargetLang
-      ) {
-        nextSourceLanguage = savedSourceLang
-        nextTargetLanguage = savedTargetLang
-      } else {
-        const geoDefaults = await detectSiteDefaults()
-        if (cancelled) return
-        nextSourceLanguage = geoDefaults.sourceLanguage
-        nextTargetLanguage = geoDefaults.targetLanguage
-      }
-
-      if (cancelled) return
-
-      setSourceLanguage(nextSourceLanguage)
-      setTargetLanguage(nextTargetLanguage)
-      setPreferencesReady(true)
+    // Remove keys saved by older versions. New credentials stay in memory.
+    for (const key of LEGACY_API_KEY_STORAGE_KEYS) {
+      localStorage.removeItem(key)
     }
 
-    void loadPreferences()
-
-    return () => {
-      cancelled = true
+    const source = localStorage.getItem('mingrelian_source_lang')
+    const target = localStorage.getItem('mingrelian_target_lang')
+    if (isTranslationLanguage(source) && isTranslationLanguage(target) && source !== target) {
+      setSourceLanguage(source)
+      setTargetLanguage(target)
     }
+    setSelectedModel(loadSelectedModel(localStorage))
+    setPreferencesReady(true)
   }, [])
 
   // Save preferences when they change
@@ -160,14 +126,12 @@ export default function Home() {
   }, [preferencesReady, selectedModel])
 
   useEffect(() => {
-    if (!preferencesReady) return
-    localStorage.setItem('mingrelian_source_lang', sourceLanguage)
-  }, [preferencesReady, sourceLanguage])
+    if (preferencesReady && sourceChoice) localStorage.setItem('mingrelian_source_lang', sourceChoice)
+  }, [preferencesReady, sourceChoice])
 
   useEffect(() => {
-    if (!preferencesReady) return
-    localStorage.setItem('mingrelian_target_lang', targetLanguage)
-  }, [preferencesReady, targetLanguage])
+    if (preferencesReady && targetChoice) localStorage.setItem('mingrelian_target_lang', targetChoice)
+  }, [preferencesReady, targetChoice])
 
   const getProvider = () => {
     return models.find(m => m.value === selectedModel)?.provider || 'openai'
@@ -271,8 +235,7 @@ export default function Home() {
     }, 60000) // 1 minute timeout
 
     try {
-      // Switch between local and production
-      const apiUrl = 'https://argo-translator.onrender.com'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://argo-translator.onrender.com'
       
       const response = await fetch(`${apiUrl}/chat`, {
         method: 'POST',
@@ -411,10 +374,8 @@ export default function Home() {
     }
   }
 
-  const clearSettings = async () => {
+  const clearSettings = () => {
     localStorage.clear()
-
-    const defaults = await detectSiteDefaults()
 
     setOpenaiKey('')
     setAnthropicKey('')
@@ -422,9 +383,8 @@ export default function Home() {
     setInputText('')
     setError('')
     setResult(null)
-    setSourceLanguage(defaults.sourceLanguage)
-    setTargetLanguage(defaults.targetLanguage)
-    setLanguage(defaults.uiLanguage)
+    setSourceLanguage(null)
+    setTargetLanguage(null)
   }
 
   return (
@@ -433,7 +393,7 @@ export default function Home() {
         onSettingsClick={SHOW_SETTINGS ? () => setIsSettingsOpen(true) : undefined}
         hasApiKey={hasApiKey()}
         showSettings={SHOW_SETTINGS}
-        primaryHeading
+        translatorPage
       />
       
       {SHOW_SETTINGS && (
@@ -452,9 +412,7 @@ export default function Home() {
       )}
 
       <main className="mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pt-16 lg:px-8">
-        <div id="about" className="sr-only">
-          <p>{t('introDescription')}</p>
-        </div>
+        <div id="about">{children}</div>
 
         {/* Language Selector Bar */}
         <div className="mb-4 flex flex-col items-stretch justify-center gap-3 rounded-lg border border-[color:var(--border)] bg-[var(--surface)] px-4 py-3 sm:flex-row sm:items-center sm:gap-5">
@@ -547,7 +505,12 @@ export default function Home() {
             <div className="relative flex-1 px-5 pt-5">
               <textarea
                 value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
+                onChange={(e) => {
+                  // Keep the direction of a draft when switching the interface language.
+                  setSourceLanguage(sourceLanguage)
+                  setTargetLanguage(targetLanguage)
+                  setInputText(e.target.value)
+                }}
                 onKeyDown={handleInputKeyDown}
                 placeholder={t('sourceTextPlaceholder')}
                 aria-label={t('sourceText')}
@@ -567,6 +530,28 @@ export default function Home() {
             </div>
           </div>
           
+          {language === 'ka' && (
+            <section className="mt-6" aria-labelledby="example-heading">
+              <h2 id="example-heading" className="text-sm font-semibold">სცადეთ ფრაზის თარგმნა მეგრულად</h2>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {GEORGIAN_EXAMPLES.map((phrase) => (
+                  <button
+                    key={phrase}
+                    type="button"
+                    onClick={() => {
+                      setSourceLanguage('georgian')
+                      setTargetLanguage('mingrelian')
+                      setInputText(phrase)
+                    }}
+                    className="rounded-md border border-[color:var(--border)] bg-white px-3 py-2 text-sm text-[var(--accent)] hover:border-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+                  >
+                    {phrase}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
           {loading && (
             <div className="flex h-12 items-center justify-center gap-3 rounded-md border border-[color:var(--border)] bg-[var(--surface)]">
               <div className="flex gap-1">
