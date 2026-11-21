@@ -28,10 +28,5 @@ export const metadata: Metadata = {
 }
 
 export default function GeorgianTranslatorPage() {
-  return (
-    <header className="mb-6">
-      <h1 className="text-2xl font-semibold text-[var(--foreground)] sm:text-3xl">{appTitle}</h1>
-      <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--muted)] sm:text-base">{introDescription}</p>
-    </header>
-  )
+  return <p className="sr-only">{introDescription}</p>
 }

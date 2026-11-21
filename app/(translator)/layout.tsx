@@ -22,7 +22,6 @@ import {
 const SHOW_SETTINGS = true
 const VISITOR_ID_STORAGE_KEY = 'mingrelian_visitor_id'
 const VISITOR_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
-const GEORGIAN_EXAMPLES = ['გამარჯობა!', 'როგორ ხარ?', 'დიდი მადლობა!']
 const AUTO_TRANSLATE_DELAY_MS = 1000
 const LEGACY_API_KEY_STORAGE_KEYS = [
   'mingrelian_openai_key',
@@ -530,28 +529,6 @@ export default function TranslatorLayout({ children }: { children: ReactNode }) 
             </div>
           </div>
           
-          {language === 'ka' && (
-            <section className="mt-6" aria-labelledby="example-heading">
-              <h2 id="example-heading" className="text-sm font-semibold">სცადეთ ფრაზის თარგმნა მეგრულად</h2>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {GEORGIAN_EXAMPLES.map((phrase) => (
-                  <button
-                    key={phrase}
-                    type="button"
-                    onClick={() => {
-                      setSourceLanguage('georgian')
-                      setTargetLanguage('mingrelian')
-                      setInputText(phrase)
-                    }}
-                    className="rounded-md border border-[color:var(--border)] bg-white px-3 py-2 text-sm text-[var(--accent)] hover:border-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
-                  >
-                    {phrase}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-
           {loading && (
             <div className="flex h-12 items-center justify-center gap-3 rounded-md border border-[color:var(--border)] bg-[var(--surface)]">
               <div className="flex gap-1">

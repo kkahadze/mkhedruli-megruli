@@ -19,7 +19,7 @@ export default function Navbar({
   translatorPage = false,
 }: NavbarProps) {
   const { language, setLanguage, t } = useLanguage()
-  const BrandTitle = translatorPage && language === 'en' ? 'h1' : 'span'
+  const BrandTitle = translatorPage ? 'h1' : 'span'
 
   const otherLanguage = language === 'en' ? 'ka' : 'en'
   const switchLabel = t(language === 'en' ? 'switchToGeorgian' : 'switchToEnglish')
@@ -28,7 +28,7 @@ export default function Navbar({
       <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
       </svg>
-      <span lang={otherLanguage} className="hidden sm:inline">{otherLanguage === 'ka' ? 'ქართული' : 'English'}</span>
+      <span lang={otherLanguage} className="hidden sm:inline">{otherLanguage === 'ka' ? 'ქარ' : 'EN'}</span>
     </>
   )
   const switchProps = {
@@ -54,7 +54,7 @@ export default function Navbar({
               className="h-9 w-9 shrink-0 rounded-md"
             />
             <BrandTitle className="truncate text-[15px] font-semibold text-[var(--foreground)] sm:text-base">
-              {language === 'ka' ? 'მხედრული' : t('appTitle')}
+              {t('appTitle')}
             </BrandTitle>
           </Link>
           
