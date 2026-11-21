@@ -2,26 +2,39 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { translatorUrls } from '@/utils/translatorUrls'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 interface NavbarProps {
   onSettingsClick?: () => void
   hasApiKey: boolean
   showSettings?: boolean
-  primaryHeading?: boolean
+  translatorPage?: boolean
 }
 
 export default function Navbar({
   onSettingsClick,
   hasApiKey,
   showSettings = true,
-  primaryHeading = false,
+  translatorPage = false,
 }: NavbarProps) {
   const { language, setLanguage, t } = useLanguage()
-  const BrandTitle = primaryHeading ? 'h1' : 'span'
+  const BrandTitle = translatorPage ? 'h1' : 'span'
 
-  const toggleLanguage = () => {
-    setLanguage(language === 'en' ? 'ka' : 'en')
+  const otherLanguage = language === 'en' ? 'ka' : 'en'
+  const switchLabel = t(language === 'en' ? 'switchToGeorgian' : 'switchToEnglish')
+  const switchContent = (
+    <>
+      <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+      </svg>
+      <span lang={otherLanguage} className="hidden sm:inline">{otherLanguage === 'ka' ? 'ქარ' : 'EN'}</span>
+    </>
+  )
+  const switchProps = {
+    className: 'flex h-10 items-center gap-2 rounded-md border border-[color:var(--border)] bg-white px-3 text-sm font-medium text-[var(--muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]',
+    title: switchLabel,
+    'aria-label': switchLabel,
   }
 
   return (
@@ -29,7 +42,7 @@ export default function Navbar({
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-[72px] items-center justify-between gap-4">
           <Link
-            href="/"
+            href={translatorUrls[language]}
             className="flex min-w-0 items-center gap-3 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent)]"
             aria-label={t('appTitle')}
           >
@@ -47,19 +60,11 @@ export default function Navbar({
           
           <div className="flex shrink-0 items-center gap-2">
             {/* Language Toggle */}
-            <button
-              onClick={toggleLanguage}
-              className="flex h-10 items-center gap-2 rounded-md border border-[color:var(--border)] bg-white px-3 text-sm font-medium text-[var(--muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
-              title={language === 'en' ? t('switchToGeorgian') : t('switchToEnglish')}
-              aria-label={language === 'en' ? t('switchToGeorgian') : t('switchToEnglish')}
-            >
-              <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-              </svg>
-              <span className="hidden sm:inline">
-                {language === 'en' ? 'ქარ' : 'EN'}
-              </span>
-            </button>
+            {translatorPage ? (
+              <Link href={translatorUrls[otherLanguage]} hrefLang={otherLanguage} {...switchProps}>{switchContent}</Link>
+            ) : (
+              <button type="button" onClick={() => setLanguage(otherLanguage)} {...switchProps}>{switchContent}</button>
+            )}
 
             {/* Settings Button - Only show if settings are enabled */}
             {showSettings && onSettingsClick && (

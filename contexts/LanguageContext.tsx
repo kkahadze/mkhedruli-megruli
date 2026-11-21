@@ -1,8 +1,10 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
+import { translatorUrls } from '@/utils/translatorUrls'
 import { Language, translations, TranslationKey } from '@/utils/translations'
-import { detectSiteDefaults, getDefaultSiteDefaults } from '@/utils/siteDefaults'
+import { detectSiteDefaults } from '@/utils/siteDefaults'
 
 interface LanguageContextType {
   language: Language
@@ -13,18 +15,25 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(getDefaultSiteDefaults().uiLanguage)
+  const pathname = usePathname()
+  const routeLanguage = pathname === translatorUrls.ka ? 'ka' : pathname === translatorUrls.en ? 'en' : null
+  const [preferredLanguage, setLanguageState] = useState<Language>('en')
+  const language = routeLanguage ?? preferredLanguage
 
-  // Load saved language preference on mount
+  // The translator URL selects its language. Other pages use the saved preference.
   useEffect(() => {
+    if (routeLanguage) {
+      localStorage.setItem('mingrelian_language', routeLanguage)
+      setLanguageState(routeLanguage)
+      return
+    }
+
     let cancelled = false
 
     const saved = localStorage.getItem('mingrelian_language')
     if (saved === 'en' || saved === 'ka') {
       setLanguageState(saved)
-      return () => {
-        cancelled = true
-      }
+      return
     }
 
     void detectSiteDefaults().then((defaults) => {
@@ -36,11 +45,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [])
-
-  useEffect(() => {
-    document.documentElement.lang = language
-  }, [language])
+  }, [routeLanguage])
 
   // Save language preference when it changes
   const setLanguage = (lang: Language) => {
@@ -55,7 +60,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
-      {children}
+      <html lang={language}>{children}</html>
     </LanguageContext.Provider>
   )
 }

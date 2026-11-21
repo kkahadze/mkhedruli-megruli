@@ -134,7 +134,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <LanguageProvider>
       <head>
         <meta httpEquiv="Content-Security-Policy" content={CONTENT_SECURITY_POLICY} />
       </head>
@@ -157,13 +157,11 @@ export default function RootLayout({
           `}
         </Script>
 
-        <LanguageProvider>
-          <div className="flex min-h-screen flex-col">
-            <div className="flex-1">{children}</div>
-            <SiteFooter />
-          </div>
-        </LanguageProvider>
+        <div className="flex min-h-screen flex-col">
+          <div className="flex-1">{children}</div>
+          <SiteFooter />
+        </div>
       </body>
-    </html>
+    </LanguageProvider>
   )
 }

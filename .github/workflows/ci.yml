@@ -24,3 +24,4 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - run: python3 -m unittest discover -s tests -p test_exported_locales.py
