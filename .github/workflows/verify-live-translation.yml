@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Test the smoke verifier offline
         run: python3 -m unittest discover -s tests -p 'test_live_translation.py'
       - name: Check only the deployed backend default
